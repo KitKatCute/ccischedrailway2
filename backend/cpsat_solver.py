@@ -521,7 +521,7 @@ def solve_faculty_assignment(
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = 20.0
-    solver.parameters.num_search_workers  = 4
+    solver.parameters.num_search_workers  = 2
     status = solver.Solve(model)
 
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
@@ -671,7 +671,7 @@ def solve_timetable(
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = 20.0
-    solver.parameters.num_search_workers  = 4
+    solver.parameters.num_search_workers  = 2
     status = solver.Solve(model)
 
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):

@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const API_BASE = window.API_BASE || (['localhost','127.0.0.1',''].includes(window.location.hostname) ? 'http://localhost:5000/api' : 'mysql://root:dXeJPjVQKyzWAHKxtKvpjRkvTArQzghf@shinkansen.proxy.rlwy.net:52455/railway'); // keep in sync with PRODUCTION_API_URL in api.js
+  const API_BASE = window.API_BASE || (['localhost','127.0.0.1',''].includes(window.location.hostname) ? 'http://localhost:5000/api' : 'https://backend-production-35dd.up.railway.app/api'); // keep in sync with PRODUCTION_API_URL in api.js
   const FALLBACK_DATASETS = [
     {key:'faculty',label:'Faculty',required:['faculty_id','first_name','last_name','webmail'],optional:['middle_name','age','gender','phone_number','specialization','academic_rank','department','max units','employment type','Avatar'],ignored:[],notes:['Faculty IDs must use the FA-### format.','Import faculty before availability or qualifications.']},
     {key:'semesters',label:'Semesters',required:['semester id','academic_year','semester_term','start_date','end_date'],optional:['max_units_per_faculty','is_active'],ignored:[],notes:['Dates must be valid YYYY-MM-DD values.']},
