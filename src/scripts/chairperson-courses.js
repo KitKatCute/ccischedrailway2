@@ -41,6 +41,7 @@ async function loadCourses() {
       code:           c.code,
       title:          c.title,
       classification: c.classification || 'IT COMMON & PROFESSIONAL COURSE',
+      program:        (c.program || '').toUpperCase(),   // 'IT' | 'CS' (owning track)
     }));
     renderTable(activeFilter, searchQuery);
     animateCount('statCourses', COURSES.length);
@@ -79,9 +80,11 @@ function renderTable(filter = 'all', query = '') {
 
   COURSES.forEach(course => {
     const isElective = course.classification.toLowerCase().includes('elective');
+    const isCS = course.program === 'CS';
     const matchFilter = filter === 'all' ||
-      (filter === 'elective' && isElective) ||
-      (filter === 'common'   && !isElective);
+      (filter === 'it_elective' && isElective && !isCS) ||
+      (filter === 'cs_elective' && isElective &&  isCS) ||
+      (filter === 'common'      && !isElective);
 
     const n = sectionCount(course.code);
     const matchOffer = activeOffer === 'all' || n === null ||

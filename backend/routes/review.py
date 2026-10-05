@@ -84,9 +84,6 @@ def approve(submission_id: int):
 
     db.session.commit()
 
-    # Check if ALL submitted submissions are now approved → notify faculty of schedule
-    _check_all_approved(sem)
-
     return jsonify({"message": "Submission approved.", "submission": sub.to_dict()}), 200
 
 
@@ -163,43 +160,3 @@ def return_for_revision(submission_id: int):
 
     db.session.commit()
     return jsonify({"message": "Submission returned for revision.", "submission": sub.to_dict()}), 200
-
-
-# ── Internal: notify all faculty once every submission is approved ──
-def _check_all_approved(sem: Semester | None):
-    """
-    If every 'submitted' availability for the active semester is now approved,
-    notify all faculty that their schedule has been published.
-    """
-    if not sem:
-        return
-
-    pending = AvailabilitySubmission.query.filter(
-        AvailabilitySubmission.semester_id == sem.id,
-        AvailabilitySubmission.status.in_(["submitted", "pending"])
-    ).count()
-
-    if pending > 0:
-        return   # Still waiting on others
-
-    # All done — notify every faculty who has an approved submission
-    approved_subs = AvailabilitySubmission.query.filter_by(
-        semester_id = sem.id,
-        status      = "approved"
-    ).all()
-
-    sem_label = f"{sem.semester_term} Semester AY {sem.academic_year}"
-
-    for sub in approved_subs:
-        _notify(
-            user_id               = sub.faculty_id,
-            notif_type            = "schedule_published",
-            title                 = "Your Schedule is Ready",
-            message               = (
-                f"All availability submissions for the {sem_label} have been approved. "
-                f"Your teaching schedule has been generated. You can now view and print it."
-            ),
-            related_submission_id = sub.id,
-        )
-
-    db.session.commit()
