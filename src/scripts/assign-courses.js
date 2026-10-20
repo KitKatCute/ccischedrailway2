@@ -1,5 +1,6 @@
 'use strict';
 
+
 // ── Topbar date ──
 const topbarDate = document.getElementById('topbarDate');
 if (topbarDate) {
@@ -24,6 +25,7 @@ let activeDept = 'all';
 let activeStatus = 'all';   // all | unassigned | assigned
 let selectedCourse = null;
 let searchQuery = '';
+let pickedSectionIds = new Set();   // sections newly chosen for the selected faculty
 
 function getCourseType(course) {
   return course.type || 'Lecture';
@@ -141,16 +143,18 @@ function selectCourse(course) {
   const sorted = [...FACULTY].sort((a, b) => {
     if (a.dept === course.dept && b.dept !== course.dept) return -1;
     if (b.dept === course.dept && a.dept !== course.dept) return 1;
-    return (a.currentLoad || 0) - (b.currentLoad || 0) || a.name.localeCompare(b.name);
+    return (a.currentUnits || 0) - (b.currentUnits || 0) || a.name.localeCompare(b.name);
   });
 
   sorted.forEach(faculty => {
     const opt = document.createElement('option');
     opt.value = faculty.id;
-    opt.textContent = `${faculty.name} (${faculty.dept} · ${faculty.currentLoad} course${faculty.currentLoad !== 1 ? 's' : ''})`;
+    opt.textContent = `${faculty.name} (${faculty.dept} · ${faculty.currentUnits || 0}/${faculty.maxUnits} units)`;
     if (Number(course.assignedTo) === Number(faculty.id)) opt.selected = true;
     select.appendChild(opt);
   });
+
+  pickedSectionIds = new Set();
 
   // Show the existing assignment immediately when editing an assigned course.
   if (course.assignedTo) {
@@ -159,6 +163,136 @@ function selectCourse(course) {
     document.getElementById('facultyPreview').style.display = 'none';
     document.getElementById('confirmAssignBtn').disabled = true;
   }
+
+  renderSections();
+}
+
+// ─────────────────────────────────────────────
+//  SECTION PICKER + LOAD PREVIEW
+// ─────────────────────────────────────────────
+function currentFacultyId() {
+  const v = document.getElementById('facultySelect')?.value;
+  return v ? Number(v) : null;
+}
+
+// Styling is applied straight from JS (element.style) so the picker looks right
+// even if a cached/older stylesheet or HTML file is being served.
+const SP = {
+  list:  'display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;padding:2px;',
+  row:   'display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;' +
+         'background:#fff;cursor:pointer;box-sizing:border-box;width:100%;' +
+         'transition:border-color .15s,background .15s;',
+  name:  'font-size:0.88rem;font-weight:800;color:#800000;line-height:1.2;',
+  pill:  'display:inline-block;margin-top:4px;padding:2px 9px;border-radius:99px;' +
+         'font-size:0.66rem;font-weight:800;letter-spacing:.02em;',
+  head:  'display:flex;align-items:center;justify-content:space-between;width:100%;',
+  all:   'background:rgba(128,0,0,0.08);border:none;border-radius:99px;padding:4px 12px;cursor:pointer;' +
+         'font-family:inherit;font-size:0.70rem;font-weight:800;color:#800000;',
+  sum:   'padding:12px 16px;border-radius:12px;font-size:0.80rem;font-weight:700;line-height:1.45;' +
+         'box-sizing:border-box;',
+};
+const SP_PILL = {
+  free:   'background:#E3F4EA;color:#2F7A4D;',            // unassigned
+  taken:  'background:#FDF1D6;color:#9A6B00;',            // held by someone else
+  mine:   'background:#ECECEC;color:#777;',               // already theirs
+};
+
+function renderSections() {
+  const group = document.getElementById('sectionGroup');
+  const list = document.getElementById('sectionList');
+  const facultyId = currentFacultyId();
+  const sections = selectedCourse?.sections || [];
+
+  if (!selectedCourse || !facultyId || !sections.length) {
+    group.style.display = 'none';
+    updateLoadSummary();
+    return;
+  }
+
+  group.style.display = 'flex';
+  group.style.flexDirection = 'column';
+  group.style.gap = '10px';
+
+  const head = group.querySelector('.section-pick__head');
+  if (head) head.style.cssText = SP.head;
+  const allBtn = document.getElementById('sectionSelectAll');
+  if (allBtn) allBtn.style.cssText = SP.all;
+
+  list.style.cssText = SP.list;
+  list.innerHTML = '';
+
+  sections.forEach(sec => {
+    const mine = Number(sec.assignedTo) === facultyId;     // already theirs: locked
+    const checked = mine || pickedSectionIds.has(sec.id);
+    const otherName = String(sec.assignedToName || '').split(' ').slice(-1)[0];
+
+    let pillText, pillKind;
+    if (mine)                { pillText = 'Already assigned';                    pillKind = 'mine';  }
+    else if (sec.assignedTo) { pillText = `${otherName} · will be reassigned`;   pillKind = 'taken'; }
+    else                     { pillText = 'Unassigned';                          pillKind = 'free';  }
+
+    const row = document.createElement('label');
+    const border = checked ? '#800000' : 'rgba(128,0,0,0.18)';
+    row.style.cssText = SP.row + `border:2px solid ${border};` +
+      (checked ? 'background:rgba(128,0,0,0.05);' : '') + (mine ? 'opacity:.6;cursor:default;' : '');
+
+    row.innerHTML = `
+      <input type="checkbox" ${checked ? 'checked' : ''} ${mine ? 'disabled' : ''}
+             style="width:17px;height:17px;margin:0;flex-shrink:0;accent-color:#800000;" />
+      <span style="display:flex;flex-direction:column;align-items:flex-start;min-width:0;">
+        <span style="${SP.name}">${escapeHtml(sec.name)}</span>
+        <span style="${SP.pill}${SP_PILL[pillKind]}">${escapeHtml(pillText)}</span>
+      </span>
+    `;
+
+    if (!mine) {
+      row.addEventListener('mouseenter', () => { if (!pickedSectionIds.has(sec.id)) row.style.borderColor = 'rgba(128,0,0,0.45)'; });
+      row.addEventListener('mouseleave', () => { if (!pickedSectionIds.has(sec.id)) row.style.borderColor = 'rgba(128,0,0,0.18)'; });
+    }
+    row.querySelector('input').addEventListener('change', e => {
+      if (e.target.checked) pickedSectionIds.add(sec.id);
+      else pickedSectionIds.delete(sec.id);
+      renderSections();
+    });
+    list.appendChild(row);
+  });
+
+  updateLoadSummary();
+}
+
+function updateLoadSummary() {
+  const box = document.getElementById('loadSummary');
+  const btn = document.getElementById('confirmAssignBtn');
+  const faculty = getFacultyById(currentFacultyId());
+
+  if (!faculty || !selectedCourse) {
+    box.style.display = 'none';
+    return;
+  }
+
+  const hasSections = (selectedCourse.sections || []).length > 0;
+  const picked = pickedSectionIds.size;
+  const addedUnits = picked * (Number(selectedCourse.units) || 0);
+  const current = Number(faculty.currentUnits) || 0;
+  const max = Number(faculty.maxUnits) || 0;
+  const after = current + addedUnits;
+  const over = max > 0 && after > max;
+
+  box.style.cssText = SP.sum + (over
+    ? 'display:block;border:2px solid #B05555;background:rgba(176,85,85,0.10);color:#954040;'
+    : 'display:block;border:2px solid rgba(128,0,0,0.15);background:rgba(128,0,0,0.04);color:rgba(128,0,0,0.75);');
+
+  box.innerHTML = picked
+    ? `<div style="font-size:0.66rem;letter-spacing:.06em;text-transform:uppercase;opacity:.75;">Load after assigning</div>` +
+      `<div style="font-size:1.05rem;font-weight:900;">${after} / ${max} units ` +
+      `<span style="font-size:0.74rem;font-weight:700;">(+${addedUnits})</span></div>` +
+      (over ? `<div style="font-size:0.74rem;">Exceeds max by ${after - max} unit${after - max !== 1 ? 's' : ''}</div>` : '')
+    : `<div style="font-size:0.66rem;letter-spacing:.06em;text-transform:uppercase;opacity:.75;">Current load</div>` +
+      `<div style="font-size:1.05rem;font-weight:900;">${current} / ${max} units</div>` +
+      `<div style="font-size:0.74rem;">Tick the section(s) to assign.</div>`;
+
+  // Need at least one newly picked section (when the course has sections listed).
+  btn.disabled = hasSections ? picked === 0 : false;
 }
 
 // ─────────────────────────────────────────────
@@ -183,7 +317,7 @@ function showFacultyPreview(facultyId) {
     <div>
       <p class="faculty-preview__name">${escapeHtml(faculty.name)}</p>
       <p class="faculty-preview__load">
-        ${escapeHtml(faculty.dept)} · Current load: ${faculty.currentLoad || 0} course${faculty.currentLoad !== 1 ? 's' : ''}
+        ${escapeHtml(faculty.dept)} · Current load: ${faculty.currentUnits || 0}/${faculty.maxUnits} units
       </p>
     </div>
   `;
@@ -191,7 +325,17 @@ function showFacultyPreview(facultyId) {
 }
 
 document.getElementById('facultySelect')?.addEventListener('change', e => {
+  pickedSectionIds = new Set();
   showFacultyPreview(e.target.value);
+  renderSections();
+});
+
+document.getElementById('sectionSelectAll')?.addEventListener('click', () => {
+  const facultyId = currentFacultyId();
+  (selectedCourse?.sections || []).forEach(sec => {
+    if (Number(sec.assignedTo) !== facultyId) pickedSectionIds.add(sec.id);
+  });
+  renderSections();
 });
 
 // ─────────────────────────────────────────────
@@ -211,19 +355,25 @@ document.getElementById('confirmAssignBtn')?.addEventListener('click', async () 
   btn.textContent = 'Saving...';
 
   try {
-    await API.assignCourseToFaculty(course.id, Number(facultyId));
+    const hasSections = (course.sections || []).length > 0;
+    await API.assignCourseToFaculty(
+      course.id, Number(facultyId),
+      hasSections ? [...pickedSectionIds] : undefined
+    );
 
-    showToast(`✓ ${course.name} assigned to ${faculty.name}`);
+    const n = pickedSectionIds.size;
+    showToast(`✓ ${course.name}${hasSections ? ` (${n} section${n !== 1 ? 's' : ''})` : ''} assigned to ${faculty.name}`);
     await loadAssignmentData();
 
     selectedCourse = null;
+    pickedSectionIds = new Set();
     document.getElementById('assignForm').style.display = 'none';
     document.getElementById('assignEmpty').style.display = 'flex';
   } catch (err) {
     showToast(`Failed to assign course: ${err.message}`, true);
   } finally {
-    btn.disabled = !document.getElementById('facultySelect').value;
     btn.textContent = 'Assign Course';
+    if (selectedCourse) updateLoadSummary(); else btn.disabled = true;
   }
 });
 
@@ -232,6 +382,7 @@ document.getElementById('confirmAssignBtn')?.addEventListener('click', async () 
 // ─────────────────────────────────────────────
 document.getElementById('cancelBtn')?.addEventListener('click', () => {
   selectedCourse = null;
+  pickedSectionIds = new Set();
   document.getElementById('assignForm').style.display = 'none';
   document.getElementById('assignEmpty').style.display = 'flex';
   renderCourses();

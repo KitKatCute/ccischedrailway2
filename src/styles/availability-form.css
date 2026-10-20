@@ -531,6 +531,67 @@
   white-space: nowrap;
 }
 
+/* "This semester" tag next to the semester name */
+.hist-tag {
+  align-self: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--maroon);
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Action row at the bottom of each history entry (Load into form / Resubmit) */
+.hist-entry__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 16px 12px;
+  border-top: 1px solid rgba(128,0,0,0.06);
+}
+
+.hist-btn {
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1.5px solid var(--maroon);
+  transition: background 0.12s, color 0.12s, opacity 0.12s;
+}
+.hist-btn--outline { background: #fff; color: var(--maroon); }
+.hist-btn--outline:hover:not(:disabled) { background: rgba(128,0,0,0.06); }
+.hist-btn--solid { background: var(--maroon); color: #fff; }
+.hist-btn--solid:hover:not(:disabled) { opacity: 0.88; }
+.hist-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Notes / loading / empty / error states inside the modal body */
+.hist-note {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.hist-note--warn {
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: #FFF7E6;
+  color: #7a5300;
+}
+.hist-state {
+  margin: 0;
+  padding: 28px 12px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.hist-state--error { color: #b00020; }
+
 /* ── Finalized banner (shown at top of card when locked) ── */
 .af-finalized-banner {
   display: flex;

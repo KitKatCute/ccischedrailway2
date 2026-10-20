@@ -35,3 +35,10 @@ Keith Lontoc would like to thank Niña Joyce for her unending support and motiva
 - Removed Rejected from the chairperson submissions filter.
 - Added delete controls for editable faculty availability slots.
 - Changed notification timestamps to readable text (for example, “8 hours ago”).
+
+## Forgot password by email (2026-10-16)
+- Forgot password now emails the faculty member a temporary password (valid 30 minutes) instead of sending a request to the chairperson. Their old password keeps working until the temporary one is used, so nobody can be locked out by someone else typing their email.
+- After logging in with a temporary password, the faculty member must set a new password before using the app (the server blocks everything else until they do).
+- Safeguards: same reply whether or not the email exists, one email per person every 2 minutes, 10 requests per IP per hour.
+- Email is sent through Brevo (HTTPS API) or SMTP such as Gmail; see backend/MAIL_SETUP.md. If email isn't configured or fails, the old chairperson request is used as a fallback.
+- Generated Timetables / Faculty Assignments PDFs now use the official PUP/CCIS header and footer in a black and gray style; faculty Teaching Assignment prints use the official letterhead; delete (trashcan) buttons are gray.

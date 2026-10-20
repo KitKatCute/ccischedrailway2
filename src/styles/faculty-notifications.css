@@ -165,7 +165,7 @@
 }
 
 .notif-item--unread {
-  background: #FFF8F8;
+  background: var(--white);
 }
 
 /* Unread indicator dot */
@@ -225,12 +225,12 @@
 .notif-item__title {
   font-size: 0.86rem;
   font-weight: 800;
-  color: var(--black);
+  color: #000000;
   line-height: 1.3;
 }
 
 .notif-item--unread .notif-item__title {
-  color: var(--maroon-dk, #600000);
+  color: #000000;
 }
 
 .notif-item__time {

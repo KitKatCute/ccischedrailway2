@@ -95,14 +95,20 @@
 /* Progress arc */
 .cp-donut__fill {
   fill: none;
-  stroke: var(--maroon);
+  stroke: rgba(128, 0, 0, 0.15); /* default: 0% — grey */
   stroke-width: 16;
   stroke-linecap: butt;
   /* circumference ≈ 2π×38 ≈ 238.76 */
   stroke-dasharray: 238.76;
   stroke-dashoffset: 238.76; /* 0% by default; JS overrides */
-  transition: stroke-dashoffset 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.4, 0, 0.2, 1),
+              stroke 0.4s ease;
 }
+
+/* Donut color tiers */
+.cp-donut__fill.donut-fill--green  { stroke: #6BBF8E; }
+.cp-donut__fill.donut-fill--yellow { stroke: #FFB81C; }
+.cp-donut__fill.donut-fill--maroon { stroke: #B05555; }
 
 /* Percentage text in the centre */
 .cp-donut__label {
@@ -113,15 +119,21 @@
   justify-content: center;
   font-size: 1.30rem;
   font-weight: 900;
-  color: var(--maroon);
+  color: rgba(128, 0, 0, 0.25); /* default: 0% */
   pointer-events: none;
+  transition: color 0.4s ease;
 }
+
+/* Label color tiers */
+.cp-donut__label.donut-label--green  { color: #4DA872; }
+.cp-donut__label.donut-label--yellow { color: #D89700; }
+.cp-donut__label.donut-label--maroon { color: #954040; }
 
 .cp-donut__caption {
   font-size: 0.68rem;
   font-weight: 900;
   letter-spacing: 0.10em;
-  color: var(--maroon);
+  color: #000000;
   text-align: center;
 }
 
@@ -175,15 +187,15 @@
 }
 
 .cp-room-icon--lecture {
-  background: linear-gradient(135deg, rgba(128, 0, 0, 0.08), rgba(128, 0, 0, 0.15));
+  background: linear-gradient(135deg, rgba(128, 0, 0, 0.07), rgba(128, 0, 0, 0.14));
   border: 2px solid rgba(128, 0, 0, 0.20);
-  color: var(--maroon);
+  color: #800000;
 }
 
 .cp-room-icon--lab {
-  background: linear-gradient(135deg, rgba(128, 0, 0, 0.12), rgba(128, 0, 0, 0.20));
-  border: 2px solid rgba(128, 0, 0, 0.25);
-  color: var(--maroon);
+  background: linear-gradient(135deg, rgba(255, 184, 28, 0.07), rgba(255, 184, 28, 0.14));
+  border: 2px solid rgba(255, 184, 28, 0.20);
+  color: #D89700;
 }
 
 .cp-card--rooms:hover .cp-room-icon {
@@ -204,6 +216,10 @@
   margin: 0;
 }
 
+/* Count color per type */
+.cp-room-wrap:has(.cp-room-icon--lecture) .cp-room-count { color: #800000; }
+.cp-room-wrap:has(.cp-room-icon--lab)     .cp-room-count { color: #D89700; }
+
 .cp-room-label {
   font-size: 0.68rem;
   font-weight: 700;
@@ -212,6 +228,10 @@
   text-transform: uppercase;
   margin: 0;
 }
+
+/* Label color per type */
+.cp-room-wrap:has(.cp-room-icon--lecture) .cp-room-label { color: rgba(128, 0, 0, 0.70); }
+.cp-room-wrap:has(.cp-room-icon--lab)     .cp-room-label { color: rgba(216, 151, 0, 0.70); }
 
 .cp-rooms-hint {
   font-size: 0.68rem;
@@ -234,6 +254,7 @@
 /* ── Faculty Availability bar chart ── */
 .cp-card--avail {
   gap: 14px;
+  padding: 20px 28px;
 }
 
 .cp-bar-chart {
@@ -241,21 +262,26 @@
   align-items: flex-end;
   justify-content: center;
   gap: 28px;
-  height: 110px;
+  height: 180px;
   padding: 0 16px;
 }
 
 .cp-bar {
-  width: 44px;
+  width: 60px;
   border-radius: 6px 6px 0 0;
-  background: var(--maroon);
+  background: rgba(128, 0, 0, 0.15); /* default */
   transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: 4px;
 }
 
-/* Second (pending) bar — slightly lighter */
+/* Submitted bar color tiers */
+.cp-bar--green  { background: #6BBF8E; }
+.cp-bar--yellow { background: #FFB81C; }
+.cp-bar--maroon { background: #B05555; }
+
+/* Second (pending) bar — always neutral grey */
 .cp-bar:nth-child(2) {
-  background: rgba(128, 0, 0, 0.45);
+  background: rgba(128, 0, 0, 0.18);
 }
 
 .cp-bar-labels {
@@ -267,7 +293,7 @@
 .cp-bar-labels span {
   font-size: 0.68rem;
   font-weight: 700;
-  color: var(--maroon);
+  color: #000000;
   letter-spacing: 0.04em;
 }
 
@@ -292,14 +318,14 @@
   font-weight: 700;
   color: var(--maroon);
   padding: 8px 12px;
-  background: var(--maroon-lt);
+  background: linear-gradient(135deg, rgba(255, 184, 28, 0.15), rgba(255, 184, 28, 0.08));
   border-radius: 10px;
-  border-left: 3px solid var(--maroon);
+  border-left: 3px solid #FFB81C;
   transition: background 0.15s;
 }
 
 .cp-unassigned-list li:hover {
-  background: rgba(128, 0, 0, 0.10);
+  background: linear-gradient(135deg, rgba(255, 184, 28, 0.22), rgba(255, 184, 28, 0.12));
 }
 
 .cp-unassigned-list li::before {
@@ -307,7 +333,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--maroon);
+  background: #F59E0B;
   flex-shrink: 0;
 }
 
@@ -355,8 +381,8 @@
 
 .cp-profile__role {
   font-size: 0.72rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.60);
+  font-weight: 700;
+  color: #FFB81C;
   letter-spacing: 0.06em;
   margin-bottom: 10px;
 }
@@ -403,16 +429,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
   background: rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 12px 4px;
+  text-align: center;
 }
 
 .cp-profile-stat__val {
   font-size: 1.05rem;
   font-weight: 900;
   color: var(--white);
+  line-height: 1.1;
+  text-align: center;
+  word-break: break-word;
 }
 
 .cp-profile-stat__lbl {
@@ -421,6 +452,7 @@
   color: rgba(255, 255, 255, 0.60);
   letter-spacing: 0.04em;
   text-align: center;
+  line-height: 1.2;
 }
 
 /* ── Overview list ── */
@@ -451,11 +483,11 @@
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.30); /* default; overridden by JS */
+  transition: background 0.3s ease;
 }
 
-.cp-profile-overview__dot--white { background: var(--white); }
-.cp-profile-overview__dot--light { background: rgba(255, 255, 255, 0.45); }
-.cp-profile-overview__dot--gold  { background: #FFD166; }
+.cp-profile-overview__dot--gold { background: #FFB81C; }
 
 .cp-profile-overview__label {
   font-size: 0.76rem;
@@ -468,6 +500,7 @@
   font-weight: 500;
   color: rgba(255, 255, 255, 0.60);
   margin-top: 1px;
+  transition: color 0.3s ease;
 }
 
 /* ═══════════════════════════════════

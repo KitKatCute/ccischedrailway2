@@ -27,7 +27,8 @@ from flask import g, request, session
 
 from database import db
 from models import (
-    AuditLog, AvailabilitySlot, AvailabilitySubmission, Course, Section, User,
+    AuditLog, AvailabilitySlot, AvailabilitySubmission, Course, PasswordResetRequest,
+    Section, User,
 )
 
 # ── Never store these request-body fields ────────────────────
@@ -37,6 +38,8 @@ _MAX_DETAILS_CHARS = 4000
 # Requests that are handled explicitly (or are pure noise) — skip in the hook.
 _SKIP_RULES = {
     "/api/auth/login", "/api/auth/logout",
+    "/api/auth/forgot-password",     # logged explicitly in the route (it's anonymous)
+    "/api/auth/set-new-password",    # logged explicitly in the route
 }
 
 # ── Friendly rules: (METHOD, url_rule) -> (category, action, entity_type) ──
@@ -47,6 +50,7 @@ _RULES: dict[tuple[str, str], tuple[str, str, str | None]] = {
     ("DELETE", "/api/availability/slots/<int:slot_id>"):     ("availability", "Removed availability slot",       "availability_slot"),
     ("POST",   "/api/availability/import-csv"):              ("availability", "Imported availability CSV",       "availability"),
     ("DELETE", "/api/availability/<int:submission_id>"):     ("availability", "Deleted availability submission", "availability"),
+    ("POST",   "/api/availability/history/<int:history_id>/apply"):   ("availability", "Reused previous availability",      "availability"),
     # Review (chairperson)
     ("POST",   "/api/review/<int:submission_id>/approve"):   ("review", "Approved availability submission",      "availability"),
     ("POST",   "/api/review/<int:submission_id>/reject"):    ("review", "Rejected availability submission",      "availability"),
@@ -80,6 +84,9 @@ _RULES: dict[tuple[str, str], tuple[str, str, str | None]] = {
     ("POST",   "/api/manage/faculty"):                       ("faculty", "Added faculty member",                 "faculty"),
     ("PUT",    "/api/manage/faculty/<int:faculty_id>"):      ("faculty", "Edited faculty member",                "faculty"),
     ("DELETE", "/api/manage/faculty/<int:faculty_id>"):      ("faculty", "Deleted faculty member",               "faculty"),
+    # Password reset requests (chairperson)
+    ("POST",   "/api/manage/password-requests/<int:request_id>/reset"):   ("faculty", "Reset faculty password",             "faculty"),
+    ("POST",   "/api/manage/password-requests/<int:request_id>/dismiss"): ("faculty", "Dismissed password reset request",  "faculty"),
     # CSV import
     ("POST",   "/api/manage/import/<dataset>"):              ("import", "Imported CSV data",                     "import"),
 }
@@ -123,6 +130,10 @@ def _target_label(view_args: dict) -> str | None:
     before_request, i.e. BEFORE a delete runs, so deleted things keep a name.
     """
     try:
+        if "request_id" in view_args:
+            r = db.session.get(PasswordResetRequest, view_args["request_id"])
+            return (f"{r.user.first_name} {r.user.last_name} ({r.user.employee_number})"
+                    if r and r.user else f"request #{view_args['request_id']}")
         if "course_id" in view_args:
             c = db.session.get(Course, view_args["course_id"])
             return f"{c.course_code} – {c.course_title}" if c else f"course #{view_args['course_id']}"

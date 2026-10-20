@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/faculty-dashboard.css" />
-  <link rel="stylesheet" href="../styles/assign-courses.css" />
+  <link rel="stylesheet" href="../styles/assign-courses.css?v=20261019b" />
   <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg" />
 </head>
 <body>
@@ -211,6 +211,22 @@
                 <!-- Populated by JS -->
               </div>
 
+              <!-- Section picker: which class/section(s) the faculty will teach -->
+              <div class="form-group" id="sectionGroup" style="display:none;">
+                <div class="section-pick__head">
+                  <label class="form-label">Class / Section</label>
+                  <button type="button" class="section-pick__all" id="sectionSelectAll">Select all</button>
+                </div>
+                <div class="section-pick__list" id="sectionList">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+
+              <!-- Load after assigning -->
+              <div class="load-summary" id="loadSummary" style="display:none;">
+                <!-- Populated by JS -->
+              </div>
+
               <!-- Action buttons -->
               <div class="form-actions">
                 <button class="btn-cancel" id="cancelBtn">Cancel</button>
@@ -229,9 +245,9 @@
   <!-- Toast notification -->
   <div class="toast" id="toast"></div>
 
-  <script src="../scripts/api.js"></script>
+  <script src="../scripts/api.js?v=20261019b"></script>
   <script src="../scripts/auth-check.js"></script>
   <script src="../scripts/notif-badge.js"></script>
-  <script src="../scripts/assign-courses.js"></script>
+  <script src="../scripts/assign-courses.js?v=20261019b"></script>
 </body>
 </html>

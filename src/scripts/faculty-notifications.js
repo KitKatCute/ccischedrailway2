@@ -90,6 +90,7 @@ const TYPE_META = {
   timetable_distributed:  { category: 'system',    tagLabel: 'System',      colorClass: 'system',      icon: ICONS.calendar },
   faculty_inactive:     { category: 'faculty',     tagLabel: 'Faculty',     colorClass: 'warning',     icon: ICONS.alert },
   faculty_unassigned:   { category: 'faculty',     tagLabel: 'Faculty',     colorClass: 'warning',     icon: ICONS.alert },
+  password_reset_request: { category: 'faculty',   tagLabel: 'Faculty',     colorClass: 'warning',     icon: ICONS.alert },
 };
 const DEFAULT_META = { category: 'system', tagLabel: 'System', colorClass: 'system', icon: ICONS.calendar };
 

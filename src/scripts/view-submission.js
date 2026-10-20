@@ -319,3 +319,132 @@ async function init() {
 }
 
 init();
+
+// ─────────────────────────────────────────────
+//  RESUBMIT HISTORY
+//  Every finalized submission is snapshotted in the database. From here the
+//  faculty member can drop a past one into this semester's form ("Load into
+//  form" — review/edit, then finalize as usual) or resubmit it straight away.
+// ─────────────────────────────────────────────
+const DAY_SHORT = DAY_FULL.map(d => d.slice(0, 3));
+
+function esc(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+function fmtHistoryDate(iso) {
+  if (!iso) return 'Date not recorded';
+  // API sends UTC without a zone suffix; add one so it shows in local time.
+  const d = new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : iso + 'Z');
+  return isNaN(d) ? 'Date not recorded'
+                  : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function historyEntryHtml(h, canApply) {
+  const cards  = AvailabilityUtils.buildSlotCards(h.slots);
+  const blocks = cards.reduce((n, c) => n + c.dayIndices.length * c.times.length, 0);
+
+  const slotLines = cards.map((c, i) => `
+    <div class="vh-slot">
+      <span class="vh-slot__num">Slot ${i + 1}</span>
+      <span class="vh-slot__days">${c.dayIndices.map(d => DAY_SHORT[d] || '').join(' ')}</span>
+      <span class="vh-slot__time">${esc(c.timeLabel)}</span>
+    </div>`).join('');
+
+  const dis = canApply ? '' : ' disabled';
+  return `
+    <div class="vh-item" data-id="${h.id}">
+      <div class="vh-item__top">
+        <div>
+          <p class="vh-item__sem">${esc(h.semester_label || 'Semester')}${
+            h.is_current_semester ? ' <span class="vh-tag">This semester</span>' : ''}</p>
+          <p class="vh-item__meta">Submitted ${esc(fmtHistoryDate(h.submitted_at))}
+            &middot; ${cards.length} ${cards.length === 1 ? 'slot' : 'slots'} &middot; ${blocks} blocks</p>
+        </div>
+        <div class="vh-item__actions">
+          <button type="button" class="vh-btn vh-btn--outline" data-act="load"${dis}>Load into form</button>
+          <button type="button" class="vh-btn vh-btn--solid" data-act="resubmit"${dis}>Resubmit</button>
+        </div>
+      </div>
+      <div class="vh-slots">${slotLines}</div>
+    </div>`;
+}
+
+async function openHistoryModal() {
+  let data;
+  try {
+    data = await API.getAvailabilityHistory();
+  } catch (err) {
+    alert('Could not load your submission history: ' + err.message);
+    return;
+  }
+  const entries  = data.history || [];
+  const canApply = !!data.can_apply;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'vh-overlay';
+  overlay.innerHTML = `
+    <div class="vh-modal" role="dialog" aria-modal="true" aria-labelledby="vhTitle">
+      <div class="vh-modal__header">
+        <p class="vh-modal__title" id="vhTitle">RESUBMIT HISTORY</p>
+        <button type="button" class="vh-modal__close" id="vhClose" aria-label="Close">&times;</button>
+      </div>
+      <div class="vh-modal__body">
+        <p class="vh-modal__note${canApply ? '' : ' vh-modal__note--warn'}">${
+          canApply
+            ? '<strong>Load into form</strong> puts a previous submission in your availability form so you can review or edit it before finalizing. <strong>Resubmit</strong> sends it to the chairperson right away.'
+            : `Your current submission is already <strong>${esc(data.current_status)}</strong>, so it can’t be replaced. You can reuse a previous one while your submission is pending or returned.`
+        }</p>
+        <div class="vh-list">${
+          entries.length
+            ? entries.map(h => historyEntryHtml(h, canApply)).join('')
+            : '<p class="vh-empty">No previous submissions yet. Once you finalize an availability submission, it will appear here.</p>'
+        }</div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const close = () => { overlay.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  overlay.querySelector('#vhClose').addEventListener('click', close);
+
+  overlay.querySelector('.vh-list').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn || btn.disabled) return;
+    const id     = Number(btn.closest('.vh-item').dataset.id);
+    const submit = btn.dataset.act === 'resubmit';
+    const entry  = entries.find(h => h.id === id);
+
+    if (submit && !window.confirm(
+      `Resubmit your ${entry?.semester_label || 'previous'} availability now?\n\n` +
+      'It replaces anything in your current form and is sent to the chairperson for review.'
+    )) return;
+    if (!submit && (storedSlotCount() > 0) && !window.confirm(
+      'Loading will replace the slots currently in your availability form. Continue?'
+    )) return;
+
+    overlay.querySelectorAll('button[data-act]').forEach(b => { b.disabled = true; });
+    try {
+      await API.applyAvailabilityHistory(id, submit);
+      close();
+      await init();
+      alert(submit
+        ? 'Your previous availability was resubmitted successfully!'
+        : 'Previous availability loaded. Review it, then click Finalize Submission.');
+    } catch (err) {
+      overlay.querySelectorAll('button[data-act]').forEach(b => { b.disabled = false; });
+      alert('Failed: ' + err.message);
+    }
+  });
+}
+
+function storedSlotCount() {
+  return availabilityData?.submission?.slots?.length || 0;
+}
+
+document.getElementById('vsHistoryBtn')?.addEventListener('click', openHistoryModal);
+

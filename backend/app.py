@@ -39,7 +39,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent / ".env")
 
 import pandas as pd
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
 from flask_cors import CORS
 
 from database import configure_db, db
@@ -99,6 +99,7 @@ def create_app():
     from routes.faculty       import faculty_bp
     from routes.imports       import imports_bp
     from routes.audit         import audit_bp
+    from routes.password_requests import password_requests_bp
 
     @app.after_request
     def _no_cache(resp):
@@ -115,10 +116,55 @@ def create_app():
     app.register_blueprint(faculty_bp)
     app.register_blueprint(imports_bp)
     app.register_blueprint(audit_bp)
+    app.register_blueprint(password_requests_bp)
+
+    # Someone who logged in with an emailed temporary password may do nothing
+    # except set a new password (or log out) until they have done so.
+    _ALLOWED_WHILE_FORCED = {
+        "/api/auth/login", "/api/auth/logout", "/api/auth/me",
+        "/api/auth/forgot-password", "/api/auth/set-new-password",
+    }
+
+    @app.before_request
+    def _force_password_change():
+        if request.method == "OPTIONS" or not request.path.startswith("/api/"):
+            return None
+        if session.get("must_change_password") and request.path not in _ALLOWED_WHILE_FORCED:
+            return jsonify({"error": "You must set a new password before continuing.",
+                            "must_change_password": True}), 403
+        return None
 
     # Audit log: records every state-changing action by chairperson/faculty
     from audit import register_audit
     register_audit(app)
+
+    # Password-reset requests table: like audit_logs, make sure it exists on
+    # startup so a deploy that hasn't re-run init_db.py can't 500 on it.
+    from models import AvailabilityHistory, PasswordResetRequest
+    with app.app_context():
+        for _model in (PasswordResetRequest, AvailabilityHistory):
+            try:
+                _model.__table__.create(db.engine, checkfirst=True)
+            except Exception as exc:
+                print(f"[startup] could not ensure {_model.__tablename__} table: {exc}")
+
+    # Add any model columns missing from the live `users` table (e.g. the new
+    # designation / teaching_assignment columns) so a deploy that hasn't
+    # re-run init_db.py can't 500 on login with "Unknown column".
+    from models import User
+    with app.app_context():
+        try:
+            from sqlalchemy import inspect, text
+            existing = {c["name"] for c in inspect(db.engine).get_columns(User.__table__.name)}
+            for column in User.__table__.columns:
+                if column.name in existing:
+                    continue
+                col_type = column.type.compile(dialect=db.engine.dialect)
+                print(f"[startup] users.{column.name} missing - adding it.")
+                with db.engine.begin() as conn:
+                    conn.execute(text(f"ALTER TABLE {User.__table__.name} ADD COLUMN {column.name} {col_type}"))
+        except Exception as exc:
+            print(f"[startup] could not sync users columns: {exc}")
 
     # Register legacy CSV-based scheduler routes (kept for backward compat)
     register_scheduler_routes(app)
@@ -130,6 +176,7 @@ def create_app():
 #  Legacy scheduler routes (CSV-based)
 # ──────────────────────────────────────────────
 def register_scheduler_routes(app: Flask):
+    from scope import chair_track, scope_faculty_query, section_in_scope
     BASE_DIR = Path(__file__).parent
     DATA_DIR = BASE_DIR / "data"
 
@@ -144,14 +191,16 @@ def register_scheduler_routes(app: Flask):
     # ── Live DataFrame builders — query the DB fresh on every call, so
     #    anything a chairperson adds/edits via /api/manage/* is immediately
     #    reflected the next time a schedule is generated. ──
-    def _faculty_df() -> pd.DataFrame:
+    def _faculty_df(scope_user=None) -> pd.DataFrame:
+        """All faculty, or only the scope_user's department when they are a
+        department chairperson."""
         cols = ["faculty_id", "employee_number", "first_name", "last_name", "email",
                 "specialization", "academic_rank", "highest_educ_attainment", "exp_years",
                 "employment_type", "max_units", "preferred_courses", "preferred_days",
                 "time_preference_mon", "time_preference_tue", "time_preference_wed",
                 "time_preference_thu", "time_preference_fri", "time_preference_sat",
                 "department"]
-        rows = User.query.filter_by(role="faculty").all()
+        rows = scope_faculty_query(scope_user, User.query.filter_by(role="faculty")).all()
         data = [{
             "faculty_id":              u.id,
             "employee_number":         u.employee_number,
@@ -202,12 +251,12 @@ def register_scheduler_routes(app: Flask):
         } for r in rows]
         return pd.DataFrame(data, columns=cols)
 
-    def _sections_df(semester_id: int | None = None) -> pd.DataFrame:
+    def _sections_df(semester_id: int | None = None, scope_user=None) -> pd.DataFrame:
         cols = ["section_id", "course_id", "section_name", "program_code",
                 "preferred_days", "preferred_time_start", "preferred_time_end",
                 "room_id", "semester_id", "status"]
         query = Section.query.filter_by(semester_id=semester_id) if semester_id else Section.query
-        rows = query.all()
+        rows = [sec for sec in query.all() if section_in_scope(scope_user, sec)]
         data = [{
             "section_id":           s.id,
             "course_id":            s.course_id,
@@ -270,6 +319,13 @@ def register_scheduler_routes(app: Flask):
         for q in FacultyCourseQualification.query.all():
             result.setdefault(q.course_id, set()).add(q.faculty_id)
         return result
+
+    def _scoped_section_ids(semester_id: int, scope_user):
+        """Section ids a department chairperson works with, or None (= all)."""
+        if chair_track(scope_user) is None:
+            return None
+        return {sec.id for sec in Section.query.filter_by(semester_id=semester_id).all()
+                if section_in_scope(scope_user, sec)}
 
     def _resolve_semester(academic_year: str, semester_term: str) -> Semester | None:
         """Match the requested (academic_year, semester) to a real Semester
@@ -457,9 +513,10 @@ def register_scheduler_routes(app: Flask):
             return jsonify({"error": "No matching or active semester found. "
                                       "Add one in the database first."}), 400
 
-        faculty_df  = _faculty_df()
+        me          = current_user()
+        faculty_df  = _faculty_df(me)          # department chairpersons: own faculty only
         courses_df  = _courses_df(active_only=True)
-        sections_df = _sections_df(semester_id=target_sem.id)
+        sections_df = _sections_df(semester_id=target_sem.id, scope_user=me)   # ...and own program's sections
 
         if faculty_df.empty:
             return jsonify({"error": "No faculty accounts found. Add faculty before generating."}), 400
@@ -494,7 +551,11 @@ def register_scheduler_routes(app: Flask):
         # ── Persist as DRAFT, replacing the previous draft for this semester.
         #    Whatever is currently APPROVED (if anything) is left alone until
         #    the chairperson explicitly approves this new draft or discards it. ──
-        FacultyAssignment.query.filter_by(semester_id=target_sem.id, status="draft").delete()
+        own_sections = _scoped_section_ids(target_sem.id, me)
+        stale = FacultyAssignment.query.filter_by(semester_id=target_sem.id, status="draft")
+        if own_sections is not None:
+            stale = stale.filter(FacultyAssignment.section_id.in_(own_sections))
+        stale.delete(synchronize_session=False)
         for row in faculty_assignment:
             db.session.add(FacultyAssignment(
                 semester_id=target_sem.id,
@@ -537,6 +598,9 @@ def register_scheduler_routes(app: Flask):
 
         drafts = FacultyAssignment.query.filter_by(
             semester_id=target_sem.id, status="draft").all()
+        own_sections = _scoped_section_ids(target_sem.id, current_user())
+        if own_sections is not None:
+            drafts = [d for d in drafts if d.section_id in own_sections]
         if not drafts:
             return jsonify({"error": "No generated faculty assignment to approve. "
                                       "Generate one first."}), 400
@@ -583,8 +647,11 @@ def register_scheduler_routes(app: Flask):
         if not target_sem:
             return jsonify({"error": "No matching or active semester found."}), 400
 
-        deleted = FacultyAssignment.query.filter_by(
-            semester_id=target_sem.id, status="draft").delete()
+        doomed = FacultyAssignment.query.filter_by(semester_id=target_sem.id, status="draft")
+        own_sections = _scoped_section_ids(target_sem.id, current_user())
+        if own_sections is not None:
+            doomed = doomed.filter(FacultyAssignment.section_id.in_(own_sections))
+        deleted = doomed.delete(synchronize_session=False)
         db.session.commit()
 
         return jsonify({"message": "Draft faculty assignment discarded.", "count": deleted})
@@ -603,10 +670,14 @@ def register_scheduler_routes(app: Flask):
         if not target_sem:
             return jsonify({"approved_count": 0, "draft_count": 0}), 200
 
-        approved_count = FacultyAssignment.query.filter_by(
-            semester_id=target_sem.id, status="approved").count()
-        draft_count = FacultyAssignment.query.filter_by(
-            semester_id=target_sem.id, status="draft").count()
+        approved_q = FacultyAssignment.query.filter_by(semester_id=target_sem.id, status="approved")
+        draft_q    = FacultyAssignment.query.filter_by(semester_id=target_sem.id, status="draft")
+        own_sections = _scoped_section_ids(target_sem.id, current_user())
+        if own_sections is not None:
+            approved_q = approved_q.filter(FacultyAssignment.section_id.in_(own_sections))
+            draft_q    = draft_q.filter(FacultyAssignment.section_id.in_(own_sections))
+        approved_count = approved_q.count()
+        draft_count    = draft_q.count()
 
         return jsonify({"approved_count": approved_count, "draft_count": draft_count})
 
@@ -644,6 +715,9 @@ def register_scheduler_routes(app: Flask):
             sid for (sid,) in db.session.query(Section.id)
             .filter(Section.semester_id == target_sem.id).all()
         }
+        own_sections = _scoped_section_ids(target_sem.id, current_user())
+        if own_sections is not None:
+            section_ids &= own_sections
         if not section_ids:
             return jsonify(empty), 200
 
@@ -663,6 +737,8 @@ def register_scheduler_routes(app: Flask):
         required_keys = set()
         for a in FacultyAssignment.query.filter_by(
                 semester_id=target_sem.id, status="approved").all():
+            if own_sections is not None and a.section_id not in own_sections:
+                continue
             if a.section and a.section.section_name:
                 required_keys.add((a.faculty_id, a.section.section_name.strip()))
         scheduled_count = len(required_keys & scheduled_keys)
@@ -696,15 +772,19 @@ def register_scheduler_routes(app: Flask):
 
         approved = FacultyAssignment.query.filter_by(
             semester_id=target_sem.id, status="approved").all()
+        me = current_user()
+        own_sections = _scoped_section_ids(target_sem.id, me)
+        if own_sections is not None:
+            approved = [a for a in approved if a.section_id in own_sections]
         if not approved:
             return jsonify({"error": f"No approved faculty assignment found for "
                                       f"{target_sem.academic_year} {target_sem.semester_term}. "
                                       f"Generate a faculty assignment and approve it first."}), 400
 
-        faculty_df  = _faculty_df()
+        faculty_df  = _faculty_df(me)
         courses_df  = _courses_df(active_only=True)
         rooms_df    = _rooms_df()
-        sections_df = _sections_df(semester_id=target_sem.id)
+        sections_df = _sections_df(semester_id=target_sem.id, scope_user=me)
 
         sec_by_id  = {int(r["section_id"]): r for _, r in sections_df.iterrows()}
         course_idx = courses_df.set_index("course_id")

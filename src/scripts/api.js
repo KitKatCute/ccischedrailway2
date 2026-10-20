@@ -47,6 +47,16 @@ async function apiFetch(endpoint, options = {}) {
     // Parse JSON body
     const data = await res.json();
 
+    // Logged in with an emailed temporary password but hasn't chosen a new one yet:
+    // the server blocks everything else, so send them back to the login page where
+    // the "set a new password" step lives.
+    if (res.status === 403 && data && data.must_change_password &&
+        !window.location.pathname.includes("login.html")) {
+      try { await fetch(API_BASE + "/auth/logout", { method: "POST", credentials: "include" }); } catch (e) {}
+      window.location.href = "../login.html";
+      throw new Error("Password change required — redirecting to login");
+    }
+
     // If response not ok, throw with backend error message
     if (!res.ok) {
       throw new Error(data.error || `HTTP ${res.status}`);
@@ -75,6 +85,35 @@ async function logout() {
 
 async function getCurrentUser() {
   return apiFetch("/auth/me");
+}
+
+// Forgot password — public (no session). A temporary password is emailed to the faculty member.
+async function forgotPassword(email) {
+  return apiFetch("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+// After logging in with an emailed temporary password: choose the real new password.
+async function setNewPassword(newPassword) {
+  return apiFetch("/auth/set-new-password", {
+    method: "POST",
+    body: JSON.stringify({ new_password: newPassword }),
+  });
+}
+
+// Chairperson: pending password reset requests
+async function getPasswordRequests() {
+  return apiFetch("/manage/password-requests");
+}
+
+async function resetPasswordRequest(requestId) {
+  return apiFetch(`/manage/password-requests/${requestId}/reset`, { method: "POST" });
+}
+
+async function dismissPasswordRequest(requestId) {
+  return apiFetch(`/manage/password-requests/${requestId}/dismiss`, { method: "POST" });
 }
 
 // ─────────────────────────────────────────────
@@ -117,6 +156,19 @@ async function saveAvailability(slots) {
 
 async function finalizeAvailability() {
   return apiFetch("/availability/finalize", { method: "POST" });
+}
+
+// Past submissions (every time this faculty finalized, any semester)
+async function getAvailabilityHistory() {
+  return apiFetch("/availability/history");
+}
+
+// Copy a past submission into this semester's form; submit=true also submits it.
+async function applyAvailabilityHistory(historyId, submit = false) {
+  return apiFetch(`/availability/history/${historyId}/apply`, {
+    method: "POST",
+    body: JSON.stringify({ submit }),
+  });
 }
 
 async function deleteSlot(slotId) {
@@ -248,10 +300,12 @@ async function getFacultyCourseAssignments() {
   return apiFetch("/manage/faculty-course-assignments");
 }
 
-async function assignCourseToFaculty(courseId, facultyId) {
+async function assignCourseToFaculty(courseId, facultyId, sectionIds) {
+  const payload = { course_id: courseId, faculty_id: facultyId };
+  if (Array.isArray(sectionIds)) payload.section_ids = sectionIds;
   return apiFetch("/manage/course-assignments", {
     method: "POST",
-    body: JSON.stringify({ course_id: courseId, faculty_id: facultyId }),
+    body: JSON.stringify(payload),
   });
 }
 
@@ -397,6 +451,11 @@ const API = {
   login,
   logout,
   getCurrentUser,
+  forgotPassword,
+  setNewPassword,
+  getPasswordRequests,
+  resetPasswordRequest,
+  dismissPasswordRequest,
   // Profile
   getProfile,
   updateProfile,
@@ -405,6 +464,8 @@ const API = {
   getMyAvailability,
   saveAvailability,
   finalizeAvailability,
+  getAvailabilityHistory,
+  applyAvailabilityHistory,
   deleteSlot,
   getAllSubmissions,
   getSubmission,

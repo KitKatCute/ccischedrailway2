@@ -322,73 +322,77 @@ if (saveBtn) {
 
 // ─────────────────────────────────────────────
 //  VIEW HISTORY MODAL
+//  Reads the faculty member's real submission history from the API
+//  (GET /api/availability/history) — nothing is hardcoded. Every submission
+//  they finalize is saved there automatically, and the matrix-seeded past
+//  semesters show up too. Each entry can be loaded into the form or resubmitted.
 // ─────────────────────────────────────────────
-const HISTORY_DATA = [
-  {
-    semester: '2nd Semester',
-    ay: 'AY 2024–2025',
-    submittedDate: 'Nov 4, 2024',
-    slots: [
-      { label: 'Slot 1', days: 'Mon, Wed, Fri', time: '7:30 AM – 12:00 PM' },
-      { label: 'Slot 2', days: 'Tue, Thu',       time: '9:00 AM – 3:00 PM'  },
-    ],
-  },
-  {
-    semester: '1st Semester',
-    ay: 'AY 2024–2025',
-    submittedDate: 'Jun 3, 2024',
-    slots: [
-      { label: 'Slot 1', days: 'Mon, Tue, Wed, Thu, Fri', time: '7:30 AM – 6:00 PM' },
-    ],
-  },
-  {
-    semester: '2nd Semester',
-    ay: 'AY 2023–2024',
-    submittedDate: 'Oct 28, 2023',
-    slots: [
-      { label: 'Slot 1', days: 'Mon, Wed, Fri', time: '9:00 AM – 3:00 PM'  },
-      { label: 'Slot 2', days: 'Sat',            time: '7:30 AM – 12:00 PM' },
-    ],
-  },
-];
+const HIST_DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+const HIST_ICON_CLOCK = `
+  <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+    <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
+    <path d="M7 4V7L9.5 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+  </svg>`;
+
+const HIST_ICON_CAL = `
+  <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+    <rect x="1" y="2" width="12" height="11" rx="2.5" stroke="currentColor" stroke-width="1.3"/>
+    <path d="M1 5.5h12" stroke="currentColor" stroke-width="1.3"/>
+    <rect x="3.5" y=".5" width="1.5" height="3.5" rx=".75" fill="currentColor"/>
+    <rect x="9" y=".5" width="1.5" height="3.5" rx=".75" fill="currentColor"/>
+  </svg>`;
+
+function histEsc(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+function histDate(iso) {
+  if (!iso) return 'Date not recorded';
+  // API sends UTC without a zone suffix; add one so it shows in local time.
+  const d = new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : iso + 'Z');
+  return isNaN(d) ? 'Date not recorded'
+                  : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function histEntryHTML(h, canApply) {
+  const sem      = h.semester || {};
+  const semName  = histEsc(String(sem.semester_term || 'Semester').replace(/^(\d)(st|nd|rd|th) Term$/, '$1$2 Semester'));
+  const ay       = sem.academic_year ? 'AY ' + histEsc(String(sem.academic_year).replace('-', '–')) : '';
+  const cards    = AvailabilityUtils.buildSlotCards(h.slots, { merge: true });
+
+  const slotsHTML = cards.length
+    ? cards.map((c, i) => `
+      <div class="hist-slot">
+        <span class="hist-slot__label">Slot ${i + 1}</span>
+        <span class="hist-slot__days">${c.dayIndices.map(d => HIST_DAY_SHORT[d] || '').join(', ')}</span>
+        <span class="hist-slot__time">${HIST_ICON_CLOCK} ${histEsc(c.timeLabel)}</span>
+      </div>`).join('')
+    : '<div class="hist-slot"><span class="hist-slot__days">No slots recorded</span></div>';
+
+  const dis = (canApply && cards.length) ? '' : ' disabled';
+  return `
+    <div class="hist-entry" data-id="${h.id}">
+      <div class="hist-entry__header">
+        <div class="hist-entry__sem">
+          <span class="hist-entry__sem-name">${semName}</span>
+          <span class="hist-entry__ay">${ay}</span>
+          ${h.is_current_semester ? '<span class="hist-tag">This semester</span>' : ''}
+        </div>
+        <span class="hist-entry__date">${HIST_ICON_CAL} Submitted ${histEsc(histDate(h.submitted_at))}</span>
+      </div>
+      <div class="hist-entry__slots">${slotsHTML}</div>
+      <div class="hist-entry__actions">
+        <button type="button" class="hist-btn hist-btn--outline" data-act="load"${dis}>Load into form</button>
+        <button type="button" class="hist-btn hist-btn--solid" data-act="resubmit"${dis}>Resubmit</button>
+      </div>
+    </div>`;
+}
 
 function ensureHistoryModal() {
   if (document.getElementById('historyModal')) return;
-
-  const entriesHTML = HISTORY_DATA.map((entry) => {
-    const slotsHTML = entry.slots.map(s => `
-      <div class="hist-slot">
-        <span class="hist-slot__label">${s.label}</span>
-        <span class="hist-slot__days">${s.days}</span>
-        <span class="hist-slot__time">
-          <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
-            <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
-            <path d="M7 4V7L9.5 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-          </svg>
-          ${s.time}
-        </span>
-      </div>`).join('');
-
-    return `
-      <div class="hist-entry">
-        <div class="hist-entry__header">
-          <div class="hist-entry__sem">
-            <span class="hist-entry__sem-name">${entry.semester}</span>
-            <span class="hist-entry__ay">${entry.ay}</span>
-          </div>
-          <span class="hist-entry__date">
-            <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
-              <rect x="1" y="2" width="12" height="11" rx="2.5" stroke="currentColor" stroke-width="1.3"/>
-              <path d="M1 5.5h12" stroke="currentColor" stroke-width="1.3"/>
-              <rect x="3.5" y=".5" width="1.5" height="3.5" rx=".75" fill="currentColor"/>
-              <rect x="9" y=".5" width="1.5" height="3.5" rx=".75" fill="currentColor"/>
-            </svg>
-            Submitted ${entry.submittedDate}
-          </span>
-        </div>
-        <div class="hist-entry__slots">${slotsHTML}</div>
-      </div>`;
-  }).join('');
 
   const modal = document.createElement('div');
   modal.id        = 'historyModal';
@@ -418,9 +422,7 @@ function ensureHistoryModal() {
           </svg>
         </button>
       </div>
-      <div class="hist-modal__body">
-        ${entriesHTML}
-      </div>
+      <div class="hist-modal__body" id="histModalBody"></div>
     </div>
   `;
   document.body.appendChild(modal);
@@ -428,21 +430,74 @@ function ensureHistoryModal() {
   modal.addEventListener('click', (e) => {
     if (e.target === modal) closeHistoryModal();
   });
-
   document.getElementById('histModalClose').addEventListener('click', closeHistoryModal);
-
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modal.classList.contains('hist-modal-backdrop--open')) {
       closeHistoryModal();
     }
   });
+  document.getElementById('histModalBody').addEventListener('click', onHistoryAction);
+}
+
+let historyEntries = [];
+
+async function renderHistoryBody() {
+  const body = document.getElementById('histModalBody');
+  body.innerHTML = '<p class="hist-state">Loading your history…</p>';
+  try {
+    const data = await API.getAvailabilityHistory();
+    historyEntries = data.history || [];
+    const canApply = !!data.can_apply;
+
+    const note = !historyEntries.length ? '' : (canApply
+      ? '<p class="hist-note"><strong>Load into form</strong> lets you review a past submission before finalizing. <strong>Resubmit</strong> sends it to the chairperson right away.</p>'
+      : `<p class="hist-note hist-note--warn">Your current submission is already <strong>${histEsc(data.current_status)}</strong>, so it can’t be replaced. You can reuse a past one while your submission is pending or returned.</p>`);
+
+    body.innerHTML = historyEntries.length
+      ? note + historyEntries.map(h => histEntryHTML(h, canApply)).join('')
+      : '<p class="hist-state">No past submissions yet. Once you finalize an availability submission, it will appear here.</p>';
+  } catch (err) {
+    body.innerHTML = `<p class="hist-state hist-state--error">Could not load your history: ${histEsc(err.message)}</p>`;
+  }
+}
+
+async function onHistoryAction(e) {
+  const btn = e.target.closest('button[data-act]');
+  if (!btn || btn.disabled) return;
+
+  const id     = Number(btn.closest('.hist-entry').dataset.id);
+  const submit = btn.dataset.act === 'resubmit';
+  const entry  = historyEntries.find(h => h.id === id);
+  const label  = entry?.semester_label || 'previous';
+
+  if (submit) {
+    if (!window.confirm(
+      `Resubmit your ${label} availability now?\n\n` +
+      'It replaces anything in your current form and is sent to the chairperson for review.'
+    )) return;
+  } else if ((availabilityData?.submission?.slots?.length || 0) > 0) {
+    if (!window.confirm('Loading will replace the slots currently in your availability form. Continue?')) return;
+  }
+
+  const buttons = document.querySelectorAll('#histModalBody button[data-act]');
+  buttons.forEach(b => { b.disabled = true; });
+  try {
+    await API.applyAvailabilityHistory(id, submit);
+    alert(submit
+      ? 'Your previous availability was resubmitted successfully!'
+      : 'Previous availability loaded. Review it, then click Finalize Submission.');
+    window.location.href = 'view-submission.html';
+  } catch (err) {
+    buttons.forEach(b => { b.disabled = false; });
+    alert('Failed: ' + err.message);
+  }
 }
 
 function openHistoryModal() {
   ensureHistoryModal();
-  const modal = document.getElementById('historyModal');
-  modal.classList.add('hist-modal-backdrop--open');
+  document.getElementById('historyModal').classList.add('hist-modal-backdrop--open');
   document.body.style.overflow = 'hidden';
+  renderHistoryBody();
 }
 
 function closeHistoryModal() {

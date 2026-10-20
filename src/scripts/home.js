@@ -2,43 +2,28 @@
  * CCISched — Homepage Scripts
  */
 
-/* ── Navbar scroll shadow ── */
+/* ── Navbar scroll effect ── */
 const navbar = document.getElementById('navbar');
 
 window.addEventListener('scroll', () => {
-  if (window.scrollY > 20) {
+  if (window.scrollY > 50) {
     navbar.classList.add('scrolled');
   } else {
     navbar.classList.remove('scrolled');
   }
-}, { passive: true });
+});
 
-/* ── Smooth active link highlight on scroll ── */
-const sections = document.querySelectorAll('section[id]');
-const navLinks = document.querySelectorAll('.navbar__links a');
-
-const observerOptions = {
-  root: null,
-  rootMargin: '-40% 0px -55% 0px',
-  threshold: 0,
-};
-
-const sectionObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      navLinks.forEach(link => {
-        link.style.fontWeight = '600';
-        if (link.getAttribute('href') === `#${entry.target.id}`) {
-          link.style.color = 'var(--mid)';
-        } else {
-          link.style.color = '';
-        }
-      });
+/* ── Smooth scroll for navigation links ── */
+document.querySelectorAll('.navbar__links a').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const targetId = link.getAttribute('href');
+    const targetSection = document.querySelector(targetId);
+    if (targetSection) {
+      targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   });
-}, observerOptions);
-
-sections.forEach(section => sectionObserver.observe(section));
+});
 
 /* ── Animate feature cards on scroll ── */
 const featureCards = document.querySelectorAll('.feature-card');
@@ -100,27 +85,49 @@ roleCards.forEach((card, i) => {
   roleObserver.observe(card);
 });
 
-/* ── Stats counter animation ── */
-const statNumbers = document.querySelectorAll('.hero__stat-number');
+/* ── Typewriter tagline ── */
+(function () {
+  const wordEl = document.getElementById('heroTypingWord');
+  if (!wordEl) return;
 
-// Simple stagger entrance for stats
-const statsSection = document.querySelector('.hero__stats');
-if (statsSection) {
-  const statsObserver = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting) {
-      statNumbers.forEach((el, i) => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(12px)';
-        el.style.transition = `opacity 0.4s ease ${i * 0.12}s, transform 0.4s ease ${i * 0.12}s`;
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            el.style.opacity = '1';
-            el.style.transform = 'translateY(0)';
-          });
-        });
-      });
-      statsObserver.unobserve(statsSection);
+  const PHRASES = [
+    'manual scheduling.',
+    'spreadsheet conflicts.',
+    'double-booked rooms.',
+    'missed assignments.',
+  ];
+
+  let phraseIdx = 0;
+  let charIdx   = 0;
+  let deleting  = false;
+
+  function tick() {
+    const current = PHRASES[phraseIdx];
+
+    if (!deleting) {
+      // Type forward
+      charIdx++;
+      wordEl.textContent = current.slice(0, charIdx);
+      if (charIdx === current.length) {
+        // Pause at full word then start deleting
+        setTimeout(() => { deleting = true; tick(); }, 1800);
+        return;
+      }
+      setTimeout(tick, 68);
+    } else {
+      // Delete backward
+      charIdx--;
+      wordEl.textContent = current.slice(0, charIdx);
+      if (charIdx === 0) {
+        deleting  = false;
+        phraseIdx = (phraseIdx + 1) % PHRASES.length;
+        setTimeout(tick, 400);
+        return;
+      }
+      setTimeout(tick, 38);
     }
-  }, { threshold: 0.5 });
-  statsObserver.observe(statsSection);
-}
+  }
+
+  // Start after a short delay so the page settles
+  setTimeout(tick, 800);
+})();

@@ -106,6 +106,8 @@
             <span class="form__error" id="passwordError"></span>
           </div>
 
+          <a href="#" class="form__forgot" id="forgotLink" hidden>Forgot password?</a>
+
           <button type="submit" class="btn-login" id="submitBtn">LOGIN</button>
         </form>
       </div>
@@ -116,83 +118,100 @@
     ═══════════════════════════ -->
     <div class="scene" aria-hidden="true">
 
-      <!-- Outer pulsing ring -->
-      <div class="scene__ring scene__ring--1"></div>
-      <div class="scene__ring scene__ring--2"></div>
-
-      <!-- Central calendar icon -->
-      <div class="scene__core">
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-          <rect x="4" y="10" width="56" height="50" rx="10" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
-          <rect x="4" y="10" width="56" height="18" rx="10" fill="rgba(255,255,255,0.15)"/>
-          <rect x="4" y="20" width="56" height="8" fill="rgba(255,255,255,0.15)"/>
-          <rect x="18" y="4" width="6" height="14" rx="3" fill="white" opacity="0.7"/>
-          <rect x="40" y="4" width="6" height="14" rx="3" fill="white" opacity="0.7"/>
-          <circle cx="20" cy="40" r="3.5" fill="white" opacity="0.9"/>
-          <circle cx="32" cy="40" r="3.5" fill="white" opacity="0.9"/>
-          <circle cx="44" cy="40" r="3.5" fill="white" opacity="0.3"/>
-          <circle cx="20" cy="52" r="3.5" fill="white" opacity="0.3"/>
-          <circle cx="32" cy="52" r="3.5" fill="white" opacity="0.9"/>
-          <circle cx="44" cy="52" r="3.5" fill="white" opacity="0.9"/>
-        </svg>
-      </div>
-
-      <!-- Orbiting dot track -->
-      <div class="scene__orbit">
-        <div class="scene__orbit-dot scene__orbit-dot--1"></div>
-        <div class="scene__orbit-dot scene__orbit-dot--2"></div>
-        <div class="scene__orbit-dot scene__orbit-dot--3"></div>
-      </div>
-
-      <!-- Floating cards -->
-      <div class="scene__card scene__card--1">
-        <div class="sc__bar sc__bar--gold"></div>
-        <div class="sc__lines">
-          <div class="sc__line sc__line--long"></div>
-          <div class="sc__line sc__line--short"></div>
+      <!-- Timetable card -->
+      <div class="scene__tt-card">
+        <div class="scene__tt-title">Generated Timetable</div>
+        <div class="scene__tt-days">
+          <span class="scene__tt-day">Mon</span>
+          <span class="scene__tt-day">Tue</span>
+          <span class="scene__tt-day">Wed</span>
+          <span class="scene__tt-day">Thu</span>
+          <span class="scene__tt-day">Fri</span>
         </div>
-        <div class="sc__dots">
-          <span class="sc__dot sc__dot--on"></span>
-          <span class="sc__dot sc__dot--on"></span>
-          <span class="sc__dot sc__dot--on"></span>
-          <span class="sc__dot sc__dot--off"></span>
-          <span class="sc__dot sc__dot--on"></span>
+        <div class="scene__tt-grid" id="loginTTGrid"></div>
+      </div>
+
+      <!-- Status badge -->
+      <div class="scene__badge-card">
+        <div class="scene__badge-dot"></div>
+        <div class="scene__badge-text">
+          Schedule <span>published</span> — all faculty notified
         </div>
       </div>
 
-      <div class="scene__card scene__card--2">
-        <div class="sc__bar sc__bar--white"></div>
-        <div class="sc__lines">
-          <div class="sc__line sc__line--long"></div>
-          <div class="sc__line sc__line--med"></div>
+      <!-- Stat chips -->
+      <div class="scene__chips">
+        <div class="scene__chip">
+          <span class="scene__chip-val">52</span>
+          <span class="scene__chip-lbl">Sections</span>
         </div>
-        <div class="sc__badge">SUBMITTED</div>
-      </div>
-
-      <div class="scene__card scene__card--3">
-        <div class="sc__bar sc__bar--gold"></div>
-        <div class="sc__lines">
-          <div class="sc__line sc__line--med"></div>
-          <div class="sc__line sc__line--short"></div>
+        <div class="scene__chip">
+          <span class="scene__chip-val">55</span>
+          <span class="scene__chip-lbl">Faculty</span>
         </div>
-        <div class="sc__dots">
-          <span class="sc__dot sc__dot--on"></span>
-          <span class="sc__dot sc__dot--on"></span>
-          <span class="sc__dot sc__dot--off"></span>
-          <span class="sc__dot sc__dot--on"></span>
-          <span class="sc__dot sc__dot--on"></span>
+        <div class="scene__chip">
+          <span class="scene__chip-val">24</span>
+          <span class="scene__chip-lbl">Rooms</span>
         </div>
       </div>
-
-      <!-- Floating particles -->
-      <div class="scene__particle scene__particle--1"></div>
-      <div class="scene__particle scene__particle--2"></div>
-      <div class="scene__particle scene__particle--3"></div>
-      <div class="scene__particle scene__particle--4"></div>
-      <div class="scene__particle scene__particle--5"></div>
 
     </div>
 
+  </div>
+
+  <!-- Forgot password (faculty): a temporary password is emailed -->
+  <div class="fp-overlay" id="fpOverlay" hidden>
+    <div class="fp-modal" role="dialog" aria-modal="true" aria-labelledby="fpTitle">
+      <button type="button" class="fp-modal__close" id="fpClose" aria-label="Close">&times;</button>
+      <h3 class="fp-modal__title" id="fpTitle">FORGOT PASSWORD</h3>
+
+      <form id="fpForm" novalidate>
+        <p class="fp-modal__text">
+          Enter your PUP webmail. We'll email you a temporary password that works
+          for 30 minutes. Log in with it and you'll be asked to choose a new password.
+        </p>
+        <div class="form__group">
+          <label class="form__label" for="fpEmail">Email address</label>
+          <div class="form__field">
+            <input type="email" id="fpEmail" class="form__input" placeholder="bgarcia@pup.edu.ph" autocomplete="email" required />
+          </div>
+          <span class="form__error" id="fpError"></span>
+        </div>
+        <button type="submit" class="btn-login" id="fpSubmit">SEND TEMPORARY PASSWORD</button>
+      </form>
+
+      <div id="fpDone" hidden>
+        <p class="fp-modal__text" id="fpDoneText"></p>
+        <button type="button" class="btn-login" id="fpDoneBtn">BACK TO LOGIN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Set a new password (shown after logging in with an emailed temporary password) -->
+  <div class="fp-overlay" id="npOverlay" hidden>
+    <div class="fp-modal" role="dialog" aria-modal="true" aria-labelledby="npTitle">
+      <button type="button" class="fp-modal__close" id="npClose" aria-label="Cancel">&times;</button>
+      <h3 class="fp-modal__title" id="npTitle">SET A NEW PASSWORD</h3>
+      <form id="npForm" novalidate>
+        <p class="fp-modal__text">
+          You logged in with a temporary password. Choose a new password to continue.
+        </p>
+        <div class="form__group">
+          <label class="form__label" for="npPass">New password</label>
+          <div class="form__field">
+            <input type="password" id="npPass" class="form__input" placeholder="At least 6 characters" autocomplete="new-password" required />
+          </div>
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="npConfirm">Confirm new password</label>
+          <div class="form__field">
+            <input type="password" id="npConfirm" class="form__input" placeholder="Re-enter new password" autocomplete="new-password" required />
+          </div>
+          <span class="form__error" id="npError"></span>
+        </div>
+        <button type="submit" class="btn-login" id="npSubmit">SAVE NEW PASSWORD</button>
+      </form>
+    </div>
   </div>
 
   <script src="scripts/api.js"></script>

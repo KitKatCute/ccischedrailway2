@@ -30,7 +30,8 @@ from flask import Blueprint, jsonify, request
 from database import db
 from models import (Course, Room, Section, Semester, FacultyAssignment, User,
                     ProgramCurriculum)
-from routes.auth import login_required, role_required
+from scope import (chair_track, in_scope, scope_faculty_query, section_in_scope)
+from routes.auth import current_user, login_required, role_required
 from notify import notify_assignments_distributed
 
 courses_bp = Blueprint("courses", __name__, url_prefix="/api/manage")
@@ -144,7 +145,9 @@ def list_course_assignments():
             "totals": {"total_courses": 0, "assigned_courses": 0, "unassigned_courses": 0},
         }), 200
 
-    faculty = User.query.filter_by(role="faculty").order_by(User.last_name, User.first_name).all()
+    me = current_user()
+    faculty = (scope_faculty_query(me, User.query.filter_by(role="faculty"))
+               .order_by(User.last_name, User.first_name).all())
 
     # Read both approved and generated draft assignments. Approved wins when a
     # section has both, so the page reflects the most current persisted state.
@@ -170,9 +173,12 @@ def list_course_assignments():
     active_courses = Course.query.filter_by(is_active=True).order_by(Course.course_code).all()
 
     for course in active_courses:
-        sections = Section.query.filter_by(
-            course_id=course.id, semester_id=semester.id
-        ).all()
+        sections = [
+            sec for sec in Section.query.filter_by(
+                course_id=course.id, semester_id=semester.id
+            ).all()
+            if section_in_scope(me, sec)   # department chairpersons: own program's sections only
+        ]
         # A course cannot be scheduled/assigned without an offering section.
         if not sections:
             continue
@@ -209,6 +215,19 @@ def list_course_assignments():
             "Laboratory" if course.lab_units and not course.lec_units else "Lecture"
         )
 
+        faculty_name_by_id = {f.id: f"{f.first_name} {f.last_name}" for f in faculty}
+        section_rows = []
+        for sec in sorted(sections, key=lambda x: (x.section_name or "")):
+            sec_assignment = assignment_by_section.get(sec.id)
+            section_rows.append({
+                "id": sec.id,
+                "name": sec.section_name,
+                "program": sec.program_code,
+                "assignedTo": sec_assignment.faculty_id if sec_assignment else None,
+                "assignedToName": faculty_name_by_id.get(sec_assignment.faculty_id)
+                                  if sec_assignment else None,
+            })
+
         course_rows.append({
             "id": course.id,
             "code": course.course_code,
@@ -216,6 +235,7 @@ def list_course_assignments():
             "dept": program or course.department or "CCIS",
             "units": course.units or 0,
             "type": course_type,
+            "sections": section_rows,
             "assignedTo": assigned_to,
             "assignedFaculty": {
                 "id": assigned_faculty.id,
@@ -228,6 +248,16 @@ def list_course_assignments():
 
     assigned_courses = sum(1 for c in course_rows if c["status"] == "assigned")
 
+    # Units actually carried per faculty (approved assignments only) -- the same
+    # basis the Faculty page uses for its Teaching Load bar.
+    units_by_faculty = {}
+    for a in assignment_by_section.values():
+        if a.status != "approved" or not a.section or not a.section.course:
+            continue
+        units_by_faculty[a.faculty_id] = (
+            units_by_faculty.get(a.faculty_id, 0) + (a.section.course.units or 0)
+        )
+
     faculty_rows = []
     for f in faculty:
         faculty_rows.append({
@@ -237,6 +267,7 @@ def list_course_assignments():
             "dept": "BSIT" if (f.department or "").lower().find("information") >= 0 else "BSCS",
             "department": f.department,
             "currentLoad": len(faculty_course_ids.get(f.id, set())),
+            "currentUnits": units_by_faculty.get(f.id, 0),
             "maxUnits": f.max_units or semester.max_units_per_faculty or 21,
             "status": f.status,
         })
@@ -264,7 +295,9 @@ def list_faculty_course_assignments():
     assigned to each person.
     """
     semester = Semester.query.filter_by(is_active=True).first()
-    faculty = User.query.filter_by(role="faculty").order_by(User.last_name, User.first_name).all()
+    me = current_user()
+    faculty = (scope_faculty_query(me, User.query.filter_by(role="faculty"))
+               .order_by(User.last_name, User.first_name).all())
 
     if not semester:
         return jsonify({
@@ -397,6 +430,8 @@ def list_faculty_course_assignments():
         ).all()
 
         for program in ("BSIT", "BSCS"):
+            if chair_track(me) and program != f"BS{chair_track(me)}":
+                continue   # department chairpersons only count their own program
             program_sections = [
                 s for s in sections if program_for_section(s) == program
             ]
@@ -445,17 +480,40 @@ def assign_course_to_faculty():
     faculty = db.session.get(User, faculty_id)
     if not faculty or faculty.role != "faculty":
         return jsonify({"error": "Faculty member not found."}), 404
+    if not in_scope(current_user(), faculty):
+        return jsonify({"error": "Forbidden: this faculty belongs to another department."}), 403
 
-    sections = Section.query.filter_by(
-        course_id=course.id, semester_id=semester.id
-    ).all()
+    sections = [
+        sec for sec in Section.query.filter_by(
+            course_id=course.id, semester_id=semester.id
+        ).all()
+        if section_in_scope(current_user(), sec)   # only the chairperson's own program's sections
+    ]
     if not sections:
         return jsonify({
             "error": f"{course.course_code} has no section offering in the active semester."
         }), 409
 
-    # Replace any existing draft/approved assignment for this course so the
-    # page behaves as a true re-assignment control rather than creating dupes.
+    # Optional: only assign the sections the chairperson picked. Without
+    # section_ids the legacy behaviour (every section of the course) applies.
+    requested_ids = body.get("section_ids")
+    if requested_ids is not None:
+        if not isinstance(requested_ids, list) or not requested_ids:
+            return jsonify({"error": "Select at least one section to assign."}), 400
+        try:
+            requested = {int(x) for x in requested_ids}
+        except (TypeError, ValueError):
+            return jsonify({"error": "section_ids must be a list of section ids."}), 400
+        valid = {s.id for s in sections}
+        if not requested <= valid:
+            return jsonify({
+                "error": "One or more selected sections do not belong to this course "
+                         "(or are outside your program)."
+            }), 400
+        sections = [s for s in sections if s.id in requested]
+
+    # Replace any existing draft/approved assignment for the chosen sections so
+    # the page behaves as a true re-assignment control rather than creating dupes.
     section_ids = [s.id for s in sections]
     FacultyAssignment.query.filter(
         FacultyAssignment.semester_id == semester.id,
@@ -734,8 +792,17 @@ def section_coverage():
     total_sections = 0
     total_covered  = 0
 
+    me = current_user()
+    scoped = chair_track(me) is not None
+    result_courses = []
     for course in courses:
-        sections = Section.query.filter_by(course_id=course.id, semester_id=semester.id).all()
+        sections = [
+            sec for sec in Section.query.filter_by(course_id=course.id, semester_id=semester.id).all()
+            if section_in_scope(me, sec)
+        ]
+        if scoped and not sections:
+            continue   # not one of this chairperson's courses
+        result_courses.append(course)
         sec_list = []
         covered = 0
         for sec in sections:
@@ -762,7 +829,7 @@ def section_coverage():
     return jsonify({
         "courses": result,
         "totals": {
-            "total_courses":    len(courses),
+            "total_courses":    len(result_courses),
             "total_sections":   total_sections,
             "sections_covered": total_covered,
         },

@@ -45,6 +45,8 @@ async function loadFacultyList() {
       employee_number:        f.employee_number,
       name:                   `${f.first_name} ${f.last_name}`,
       type:                   (f.employment_type || 'Full Time').replace(/ /g, '-'),
+      designation:            (f.designation || '').trim(),
+      teachingAssignment:     (f.dept_employment_type || '').trim(),
       load:                   loads[f.id] || 0,   // real assigned units from published schedule
       max:                    f.max_units || 21,
       availability:           null,   // detailed day/time view — not wired yet
@@ -65,6 +67,14 @@ async function loadFacultyList() {
     console.error('[Faculty] Failed to load:', err);
   }
 }
+
+// Escape text from the DB before it goes into innerHTML / attributes
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+const escapeAttr = escapeHtml;
 
 // ─────────────────────────────────────────────
 //  RENDER ROWS
@@ -92,11 +102,25 @@ function renderRows(filter = 'all', query = '') {
 
   facultyData.forEach((f, idx) => {
     const matchFilter = filter === 'all' || f.type === filter;
-    const matchQuery  = !q || f.name.toLowerCase().includes(q) || f.type.toLowerCase().includes(q);
+    const matchQuery  = !q || f.name.toLowerCase().includes(q) || f.type.toLowerCase().includes(q) ||
+                        f.designation.toLowerCase().includes(q) ||
+                        f.teachingAssignment.toLowerCase().includes(q);
     if (!matchFilter || !matchQuery) return;
 
     const pct = Math.min((f.load / f.max) * 100, 100).toFixed(1);
     const over = f.load >= f.max;
+
+    // Color tier is relative to this faculty's own max load:
+    //   green  = less than half of max
+    //   yellow = half of max up to (but not including) full
+    //   red    = full (at or over max)
+    let loadTier = '';
+    if (f.max > 0 && f.load > 0) {
+      const ratio = f.load / f.max;
+      if (ratio >= 1)        loadTier = 'fl-load__fill--maroon';
+      else if (ratio >= 0.5) loadTier = 'fl-load__fill--yellow';
+      else                   loadTier = 'fl-load__fill--green';
+    }
 
     const row = document.createElement('div');
     row.className = 'fl-row';
@@ -108,9 +132,13 @@ function renderRows(filter = 'all', query = '') {
         <span class="fl-row__type-label">${f.type.replace('|', ' | ')}</span>
         <div class="fl-status-badges">${statusBadgesHtml(f)}</div>
       </div>
+      <span class="fl-row__designation${f.designation ? '' : ' fl-row__designation--none'}"
+            title="${escapeAttr(f.designation)}">${f.designation ? escapeHtml(f.designation) : '\u2014'}</span>
+      <span class="fl-row__assignment${f.teachingAssignment ? '' : ' fl-row__assignment--none'}"
+            title="${escapeAttr(f.teachingAssignment)}">${f.teachingAssignment ? escapeHtml(f.teachingAssignment) : '\u2014'}</span>
       <div class="fl-load">
         <div class="fl-load__track">
-          <div class="fl-load__fill ${over ? 'fl-load__fill--over' : ''}"
+          <div class="fl-load__fill ${loadTier} ${over ? 'fl-load__fill--over' : ''}"
                style="width:0%" data-pct="${pct}"></div>
         </div>
         <span class="fl-load__label">${f.load}/${f.max}</span>
@@ -175,7 +203,7 @@ function hasAvailability(f) {
   return DAYS.some(d => (f.availability[d] || []).length > 0);
 }
 
-// Demo/test accounts (seeded for login testing, e.g. faculty@pup.edu.ph,
+// Demo/test accounts (seeded for login testing: Test Faculty and
 // msantos@pup.edu.ph) have no real availability data by design — they
 // shouldn't block real generation the way an actual faculty member with
 // a genuinely missing submission should.
@@ -997,3 +1025,155 @@ cpSaveButton?.addEventListener('click', async () => {
     cpSaveButton.disabled = false;
   }
 });
+
+// ─────────────────────────────────────────────
+//  PASSWORD RESET REQUESTS
+//  Faculty file these from the login page ("Forgot password?"). The
+//  chairperson resets the password here and relays the one-time temporary
+//  password; the faculty member then changes it from their profile.
+// ─────────────────────────────────────────────
+let passwordRequests = [];
+
+function setPasswordRequestBadge(count) {
+  const badge = document.getElementById('passwordRequestsBadge');
+  if (!badge) return;
+  badge.textContent = count;
+  badge.hidden = !count;
+}
+
+async function refreshPasswordRequests() {
+  try {
+    const res = await API.getPasswordRequests();
+    passwordRequests = res.requests || [];
+    setPasswordRequestBadge(passwordRequests.length);
+  } catch (err) {
+    console.error('[Faculty] Failed to load password requests:', err);
+  }
+}
+
+function formatRequestTime(iso) {
+  if (!iso) return '';
+  // The API sends UTC without a zone suffix; add one so it renders in local time.
+  const d = new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : iso + 'Z');
+  return isNaN(d) ? '' : d.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+
+function prRowHtml(r) {
+  return `
+    <div class="pr-item" data-id="${r.id}">
+      <div class="pr-item__info">
+        <span class="pr-item__name">${escapeHtml(r.faculty_name)}</span>
+        <span class="pr-item__meta">${escapeHtml(r.employee_number)} &middot; ${escapeHtml(r.email)}</span>
+        <span class="pr-item__meta">Requested ${escapeHtml(formatRequestTime(r.requested_at))}</span>
+      </div>
+      <div class="pr-item__actions">
+        <button type="button" class="pending-modal-btn pending-modal-btn--secondary pr-btn" data-act="dismiss">Dismiss</button>
+        <button type="button" class="pending-modal-btn pending-modal-btn--primary pr-btn" data-act="reset">Reset Password</button>
+      </div>
+    </div>`;
+}
+
+function prResultHtml(r, password) {
+  return `
+    <div class="pr-item pr-item--done" data-id="${r.id}">
+      <div class="pr-item__info">
+        <span class="pr-item__name">${escapeHtml(r.faculty_name)}</span>
+        <span class="pr-item__meta">Temporary password &mdash; shown once. Give it to ${escapeHtml(r.faculty_name.split(' ')[0])}
+          and ask them to change it from their profile page.</span>
+        <div class="pr-temp">
+          <code class="pr-temp__code">${escapeHtml(password)}</code>
+          <button type="button" class="pending-modal-btn pending-modal-btn--secondary pr-btn" data-act="copy"
+                  data-pw="${escapeAttr(password)}">Copy</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function openPasswordRequestsModal() {
+  const overlay = document.createElement('div');
+  overlay.className = 'pending-modal-overlay pending-modal-overlay--open';
+  overlay.innerHTML = `
+    <div class="pending-modal pr-modal" role="dialog" aria-modal="true" aria-labelledby="prTitle">
+      <div class="pending-modal__header">
+        <svg width="28" height="28" viewBox="0 0 16 16" fill="none">
+          <rect x="3" y="7" width="10" height="7.5" rx="2" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M5.5 7V5a2.5 2.5 0 015 0v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        <p class="pending-modal__title" id="prTitle">PASSWORD RESET REQUESTS</p>
+      </div>
+      <div class="pending-modal__body">
+        <p class="pending-modal__sub">
+          Check that the request really came from the faculty member before resetting.
+          Resetting replaces their current password right away.
+        </p>
+        <div class="pending-list pr-list" id="prList"></div>
+      </div>
+      <div class="pending-modal__footer">
+        <button class="pending-modal-btn pending-modal-btn--primary" id="prCloseBtn">Close</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const list = overlay.querySelector('#prList');
+  const renderEmpty = () => {
+    if (!list.querySelector('.pr-item')) {
+      list.innerHTML = '<p class="pr-empty">No pending password reset requests.</p>';
+    }
+  };
+  list.innerHTML = passwordRequests.map(prRowHtml).join('');
+  renderEmpty();
+
+  const close = () => {
+    overlay.classList.remove('pending-modal-overlay--open');
+    setTimeout(() => overlay.remove(), 300);
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  overlay.querySelector('#prCloseBtn').addEventListener('click', close);
+
+  list.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const act = btn.dataset.act;
+
+    if (act === 'copy') {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.pw);
+        btn.textContent = 'Copied';
+      } catch { showToast('Could not copy — select the password and copy it manually.', 'error'); }
+      return;
+    }
+
+    const item = btn.closest('.pr-item');
+    const id   = Number(item.dataset.id);
+    const req  = passwordRequests.find(r => r.id === id);
+    item.querySelectorAll('button').forEach(b => { b.disabled = true; });
+
+    try {
+      if (act === 'reset') {
+        const res = await API.resetPasswordRequest(id);
+        item.outerHTML = prResultHtml(req, res.password);
+      } else {
+        await API.dismissPasswordRequest(id);
+        item.remove();
+        showToast(`Request from ${req.faculty_name} dismissed.`);
+      }
+      passwordRequests = passwordRequests.filter(r => r.id !== id);
+      setPasswordRequestBadge(passwordRequests.length);
+      renderEmpty();
+    } catch (err) {
+      item.querySelectorAll('button').forEach(b => { b.disabled = false; });
+      showToast('Failed: ' + err.message, 'error');
+      refreshPasswordRequests();   // e.g. someone else already handled it
+    }
+  });
+}
+
+document.getElementById('passwordRequestsBtn')?.addEventListener('click', async () => {
+  await refreshPasswordRequests();
+  openPasswordRequestsModal();
+});
+
+refreshPasswordRequests();

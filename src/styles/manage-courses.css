@@ -176,6 +176,11 @@
   border-color: var(--maroon);
 }
 
+.mc-action-btn--delete {
+  color: #6B7280;
+  border-color: rgba(107, 114, 128, 0.35);
+}
+
 .mc-action-btn--delete:hover {
   background: #C0392B;
   border-color: #C0392B;

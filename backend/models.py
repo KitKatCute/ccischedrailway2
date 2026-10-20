@@ -12,6 +12,8 @@ Tables
   sections               — class sections (course offering instances)
   availability_slots     — individual day/time preference slots
   availability_submissions — one submission per faculty per semester
+  availability_history   — snapshot of slots each time a submission is finalized
+  password_reset_requests — faculty "forgot password" requests for the chairperson
   schedules              — generated schedule entries (faculty × section × time)
   notifications          — in-app notifications for both roles
 """
@@ -36,6 +38,12 @@ class User(db.Model):
     email                 = db.Column(db.String(120), unique=True, nullable=False)
     password_hash         = db.Column(db.String(256), nullable=False)
 
+    # Forgot-password: a one-off temporary password that is emailed to the user.
+    # The normal password stays valid until the temp one is actually used.
+    temp_password_hash    = db.Column(db.String(256))
+    temp_password_expires = db.Column(db.DateTime)    # UTC
+    temp_password_sent_at = db.Column(db.DateTime)    # UTC - used for the resend cooldown
+
     # "faculty" | "chairperson"
     role                  = db.Column(db.String(20), nullable=False, default="faculty")
 
@@ -48,6 +56,10 @@ class User(db.Model):
     # Profile fields
     specialization        = db.Column(db.String(100))
     academic_rank         = db.Column(db.String(80))
+    designation           = db.Column(db.String(150))   # e.g. "Dean", "Chairperson, DIT" (blank for none)
+    # Raw `dept_employment_type` from the faculty CSV, shown as TEACHING ASSIGNMENT
+    # (e.g. "Permanent IT", "Part-Time CS", "Permanent CS Designee")
+    dept_employment_type  = db.Column(db.String(60))
     highest_educ_attainment = db.Column(db.String(80))
     exp_years             = db.Column(db.Integer, default=0)
     employment_type       = db.Column(db.String(20), default="Full Time")  # Full Time | Part Time
@@ -107,6 +119,8 @@ class User(db.Model):
             "subjects_assigned_count": len({s.course_code for s in self.schedules}),
             "specialization":          self.specialization,
             "academic_rank":           self.academic_rank,
+            "designation":             self.designation,
+            "dept_employment_type":    self.dept_employment_type,
             "highest_educ_attainment": self.highest_educ_attainment,
             "exp_years":               self.exp_years,
             "employment_type":         self.employment_type,
@@ -460,6 +474,53 @@ class AvailabilitySlot(db.Model):
 
 
 # ─────────────────────────────────────────────────────────────
+#  AVAILABILITY HISTORY
+#  A snapshot of a faculty member's slots, written every time they finalize
+#  a submission. availability_submissions holds ONE row per faculty+semester
+#  that gets overwritten when slots are re-saved, so without this the earlier
+#  versions (and past semesters' choices) would be lost. Faculty can reuse
+#  any snapshot to fill in or resubmit the current semester's availability.
+#  submission_id is a plain integer on purpose: history must outlive the
+#  submission row if a chairperson deletes it.
+# ─────────────────────────────────────────────────────────────
+class AvailabilityHistory(db.Model):
+    __tablename__ = "availability_history"
+
+    id            = db.Column(db.Integer, primary_key=True)
+    faculty_id    = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    semester_id   = db.Column(db.Integer, db.ForeignKey("semesters.id"), nullable=False)
+    submission_id = db.Column(db.Integer)                 # source submission (may no longer exist)
+    submitted_at  = db.Column(db.DateTime)
+    slots_json    = db.Column(db.Text, nullable=False)    # [{slot_number, day_indices, time_start, time_end, time_label}]
+    source        = db.Column(db.String(20))              # 'matrix' = seeded from the availability CSV; NULL = real submission
+    created_at    = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    semester = db.relationship("Semester")
+
+    @property
+    def slots(self) -> list:
+        import json
+        try:
+            return json.loads(self.slots_json or "[]")
+        except ValueError:
+            return []
+
+    def to_dict(self) -> dict:
+        sem = self.semester
+        return {
+            "id":             self.id,
+            "semester_id":    self.semester_id,
+            "semester":       sem.to_dict() if sem else None,
+            "semester_label": (f"{sem.semester_term} Semester AY {sem.academic_year}" if sem else ""),
+            "submission_id":  self.submission_id,
+            "source":         self.source,
+            "submitted_at":   self.submitted_at.isoformat() if self.submitted_at else None,
+            "created_at":     self.created_at.isoformat() if self.created_at else None,
+            "slots":          self.slots,
+        }
+
+
+# ─────────────────────────────────────────────────────────────
 #  SCHEDULES  (generated timetable entries)
 # ─────────────────────────────────────────────────────────────
 class Schedule(db.Model):
@@ -514,7 +575,7 @@ class Notification(db.Model):
 
     # "submission_received" | "submission_approved" | "submission_rejected"
     # "submission_returned" | "schedule_published"
-    # "faculty_inactive" | "faculty_unassigned"
+    # "faculty_inactive" | "faculty_unassigned" | "password_reset_request"
     # "assignment_distributed" | "timetable_distributed"
     notif_type  = db.Column(db.String(40), nullable=False)
 
@@ -542,6 +603,41 @@ class Notification(db.Model):
             "is_read":                self.is_read,
             "related_submission_id":  self.related_submission_id,
             "created_at":             self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+# ─────────────────────────────────────────────────────────────
+#  PASSWORD RESET REQUESTS
+#  A faculty member who forgot their password asks (from the login page,
+#  no session) for the chairperson to reset it. The chairperson resets it
+#  from the Faculty page, which issues a one-time temporary password.
+# ─────────────────────────────────────────────────────────────
+class PasswordResetRequest(db.Model):
+    __tablename__ = "password_reset_requests"
+
+    id           = db.Column(db.Integer, primary_key=True)
+    user_id      = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+
+    # "pending" | "completed" (password was reset) | "dismissed"
+    status       = db.Column(db.String(20), default="pending", nullable=False)
+    requested_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    resolved_at  = db.Column(db.DateTime)
+    resolved_by  = db.Column(db.Integer, db.ForeignKey("users.id"))
+
+    user = db.relationship("User", foreign_keys=[user_id])
+
+    def to_dict(self) -> dict:
+        u = self.user
+        return {
+            "id":              self.id,
+            "user_id":         self.user_id,
+            "faculty_name":    f"{u.first_name} {u.last_name}" if u else "",
+            "employee_number": u.employee_number if u else "",
+            "email":           u.email if u else "",
+            "employment_type": u.employment_type if u else "",
+            "status":          self.status,
+            "requested_at":    self.requested_at.isoformat() if self.requested_at else None,
+            "resolved_at":     self.resolved_at.isoformat() if self.resolved_at else None,
         }
 
 

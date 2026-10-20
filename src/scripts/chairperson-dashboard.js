@@ -53,6 +53,22 @@ function animateDonut(fillId, labelId, pct) {
 
   const offset = CIRCUMFERENCE - (pct / 100) * CIRCUMFERENCE;
 
+  // Color tier: low=green, mid=yellow, full/high=maroon
+  fill.classList.remove('donut-fill--green', 'donut-fill--yellow', 'donut-fill--maroon');
+  if (pct === 0)       { /* no class — default grey */ }
+  else if (pct >= 100) fill.classList.add('donut-fill--maroon');
+  else if (pct >= 50)  fill.classList.add('donut-fill--yellow');
+  else                 fill.classList.add('donut-fill--green');
+
+  // Apply matching color to the label too
+  const labelEl = document.getElementById(labelId);
+  if (labelEl) {
+    labelEl.classList.remove('donut-label--green', 'donut-label--yellow', 'donut-label--maroon');
+    if (pct >= 100)     labelEl.classList.add('donut-label--maroon');
+    else if (pct >= 50) labelEl.classList.add('donut-label--yellow');
+    else if (pct > 0)   labelEl.classList.add('donut-label--green');
+  }
+
   // Trigger CSS transition by setting after a short delay (allows paint first)
   requestAnimationFrame(() => {
     fill.style.strokeDashoffset = offset;
@@ -183,8 +199,27 @@ async function loadDashboard() {
     const overviewCoverage    = document.getElementById('overviewCoverage');
     const overviewAvailability = document.getElementById('overviewAvailability');
     const overviewUnassigned  = document.getElementById('overviewUnassigned');
+
+    // Helper: pick tier color based on pct (low=green, mid=amber, high=maroon)
+    function tierColor(pct) {
+      if (pct >= 100) return { dot: '#B05555', text: '#954040' };
+      if (pct >= 50)  return { dot: '#F0BB5A', text: '#C9931A' };
+      if (pct > 0)    return { dot: '#6BBF8E', text: '#4DA872' };
+      return { dot: 'rgba(255,255,255,0.30)', text: 'rgba(255,255,255,0.45)' };
+    }
+
+    function applyOverviewTier(dotId, valueEl, pct) {
+      const c = tierColor(pct);
+      const dot = document.getElementById(dotId);
+      if (dot)     dot.style.background = c.dot;
+      if (valueEl) valueEl.style.color   = c.text;
+    }
+
     if (overviewCoverage)     overviewCoverage.textContent = `${coveragePct}% Complete`;
     if (overviewAvailability) overviewAvailability.textContent = `${availabilityPct}% Complete`;
+
+    applyOverviewTier('dotCoverage',     overviewCoverage,     coveragePct);
+    applyOverviewTier('dotAvailability', overviewAvailability, availabilityPct);
 
     // ── Unassigned sections (flatten every uncovered section across courses) ──
     const unassigned = [];
@@ -204,6 +239,13 @@ async function loadDashboard() {
       [submittedCount, pendingCount].forEach((val, idx) => {
         const bar = document.createElement('div');
         bar.className = 'cp-bar';
+        // Color tier on submitted bar (idx=0) based on submission rate
+        if (idx === 0) {
+          const ratio = faculty.length > 0 ? (submittedCount / faculty.length) * 100 : 0;
+          if (ratio >= 100)     bar.classList.add('cp-bar--maroon');
+          else if (ratio >= 50) bar.classList.add('cp-bar--yellow');
+          else if (ratio > 0)   bar.classList.add('cp-bar--green');
+        }
         bar.style.height = '4px';
         bar.setAttribute('title', (idx === 0 ? 'Submitted' : 'Pending') + ': ' + val);
         barChart.appendChild(bar);

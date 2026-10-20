@@ -20,7 +20,8 @@ from werkzeug.security import generate_password_hash
 
 from database import db
 from models import User
-from routes.auth import login_required, role_required
+from scope import (TRACK_DEPARTMENT, chair_track, in_scope, scope_faculty_query)
+from routes.auth import current_user, login_required, role_required
 from faculty_status import sync_faculty_status
 
 faculty_bp = Blueprint("faculty_manage", __name__, url_prefix="/api/manage")
@@ -35,7 +36,9 @@ def normalize_password(employee_number: str) -> str:
 @login_required
 def list_faculty():
     sync_faculty_status()   # live check — flags + notifies on first detection per AY
-    faculty = User.query.filter_by(role="faculty").order_by(User.last_name).all()
+    # A department chairperson only sees faculty of their own department.
+    faculty = (scope_faculty_query(current_user(), User.query.filter_by(role="faculty"))
+               .order_by(User.last_name).all())
     return jsonify([f.to_dict() for f in faculty]), 200
 
 
@@ -77,6 +80,9 @@ def add_faculty():
         preferred_days          = body.get("preferred_days", ""),
         avatar                  = "female",
     )
+    track = chair_track(current_user())
+    if track:   # department chairpersons can only add faculty to their own department
+        faculty.department = TRACK_DEPARTMENT[track]
     db.session.add(faculty)
     db.session.commit()
 
@@ -94,6 +100,8 @@ def edit_faculty(faculty_id: int):
     faculty = db.session.get(User, faculty_id)
     if not faculty or faculty.role != "faculty":
         return jsonify({"error": "Faculty not found."}), 404
+    if not in_scope(current_user(), faculty):
+        return jsonify({"error": "Forbidden: this faculty belongs to another department."}), 403
 
     body = request.get_json(silent=True) or {}
 
@@ -135,6 +143,8 @@ def delete_faculty(faculty_id: int):
     faculty = db.session.get(User, faculty_id)
     if not faculty or faculty.role != "faculty":
         return jsonify({"error": "Faculty not found."}), 404
+    if not in_scope(current_user(), faculty):
+        return jsonify({"error": "Forbidden: this faculty belongs to another department."}), 403
 
     db.session.delete(faculty)
     db.session.commit()

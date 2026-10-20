@@ -17,6 +17,7 @@ from flask import Blueprint, jsonify, request
 from database import db
 from models import AvailabilitySubmission, Notification, Semester, User
 from routes.auth import current_user, login_required, role_required
+from scope import in_scope
 
 review_bp = Blueprint("review", __name__, url_prefix="/api/review")
 
@@ -45,6 +46,8 @@ def _get_reviewable(submission_id: int):
     sub = db.session.get(AvailabilitySubmission, submission_id)
     if not sub:
         return None, (jsonify({"error": "Submission not found."}), 404)
+    if not in_scope(current_user(), sub.faculty):
+        return None, (jsonify({"error": "Forbidden: this faculty belongs to another department."}), 403)
     if sub.status != "submitted":
         return None, (
             jsonify({"error": f"Submission status is '{sub.status}' — only 'submitted' can be reviewed."}),

@@ -61,8 +61,8 @@
 }
 
 .crs-stat {
-  background: rgba(255, 255, 255, 0.10);
-  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  background: var(--white);
+  border: 1.5px solid rgba(128, 0, 0, 0.20);
   border-radius: 14px;
   padding: 20px 12px;
   display: flex;
@@ -73,22 +73,42 @@
 }
 
 .crs-stat:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: #FAFAFA;
+}
+
+/* First stat card (Courses) - White background */
+.crs-stat:first-child {
+  background: var(--white);
+  border-color: rgba(128, 0, 0, 0.20);
+}
+
+.crs-stat:first-child:hover {
+  background: #FAFAFA;
 }
 
 .crs-stat__val {
   font-size: 2.4rem;
   font-weight: 900;
-  color: var(--white);
+  color: var(--maroon);
   line-height: 1;
+}
+
+/* First stat value - Maroon text */
+.crs-stat:first-child .crs-stat__val {
+  color: var(--maroon);
 }
 
 .crs-stat__lbl {
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(128, 0, 0, 0.65);
   text-align: center;
+}
+
+/* First stat label - Maroon text */
+.crs-stat:first-child .crs-stat__lbl {
+  color: rgba(128, 0, 0, 0.65);
 }
 
 /* ═══════════════════════════════════
@@ -349,19 +369,39 @@
 .crs-cov-fill {
   height: 100%;
   border-radius: 99px;
-  background: var(--maroon);
+  background: #E5E7EB; /* default: 0% coverage */
   width: 0%; /* animated by JS */
   transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 100% coverage — green */
+.crs-cov-fill--green {
+  background: linear-gradient(90deg, #6BBF8E, #4DA872);
+}
+
+/* 50–99% coverage — yellow/amber */
+.crs-cov-fill--yellow {
+  background: linear-gradient(90deg, #FFB81C, #E8A324);
+}
+
+/* 1–49% coverage — maroon */
+.crs-cov-fill--maroon {
+  background: linear-gradient(90deg, #B05555, #954040);
 }
 
 .crs-cov-pct {
   font-size: 0.66rem;
   font-weight: 800;
-  color: var(--maroon);
+  color: #9CA3AF; /* default: no coverage */
   width: 30px;
   text-align: right;
   flex-shrink: 0;
 }
+
+/* Label color tiers */
+.crs-cov-pct--green  { color: #4DA872; }
+.crs-cov-pct--yellow { color: #C9931A; }
+.crs-cov-pct--maroon { color: #954040; }
 
 /* ── Coverage card footer ── */
 .crs-coverage-footer {

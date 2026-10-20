@@ -23,9 +23,10 @@ Usage:
 
 from __future__ import annotations
 
+import json
 import re
 import sys
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from dateutil import parser as dateparser
@@ -41,7 +42,7 @@ from id_utils import fa_to_id
 from models import (
     User, Semester, Course, Room, Section,
     ProgramCurriculum, FacultyCourseQualification,
-    AvailabilitySubmission, AvailabilitySlot,
+    AvailabilitySubmission, AvailabilitySlot, AvailabilityHistory,
 )
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -412,6 +413,8 @@ def seed_users(app):
             user.contact_number          = _format_ph_phone(phone_raw) if phone_raw else user.contact_number
             user.specialization          = _clean(row.get("specialization"))
             user.academic_rank           = _clean(row.get("academic rank")) or _clean(row.get("academic_rank"))
+            user.designation             = _first(row, "designation")   # blank clears it
+            user.dept_employment_type    = _first(row, "dept_employment_type", "teaching assignment") or None   # blank clears it
             user.highest_educ_attainment = user.highest_educ_attainment or ""   # not in this dataset
             user.exp_years                = user.exp_years or 0                  # not in this dataset
             user.employment_type         = _map_employment_type(_first(row, "employment type", "employment_type"))
@@ -535,7 +538,7 @@ def seed_demo_accounts(app):
              first_name="Admin",         last_name="Chairperson", employee_number="DEMO-CHAIR-01"),
         dict(email="demo.chair@pup.edu.ph",  password="chair123",   role="chairperson",
              first_name="Christian Rey", last_name="Dela Cruz",   employee_number="DEMO-CHAIR-02"),
-        dict(email="faculty@pup.edu.ph",     password="faculty123", role="faculty",
+        dict(email="ferlyn.crisostomo12@gmail.com", password="faculty123", role="faculty",
              first_name="Test",          last_name="Faculty",     employee_number="DEMO-FAC-01"),
         dict(email="msantos@pup.edu.ph",     password="faculty123", role="faculty",
              first_name="Maria",         last_name="Santos",      employee_number="DEMO-FAC-02",
@@ -544,8 +547,19 @@ def seed_demo_accounts(app):
 
     with app.app_context():
         for acc in demo_accounts:
-            user = User.query.filter_by(email=acc["email"]).first()
+            # Find by employee number first so changing a demo account's email here
+            # updates the existing row instead of trying to create a duplicate.
+            user = (User.query.filter_by(employee_number=acc["employee_number"]).first()
+                    or User.query.filter_by(email=acc["email"]).first())
             if user:
+                if user.email != acc["email"]:
+                    clash = User.query.filter_by(email=acc["email"]).first()
+                    if clash and clash.id != user.id:
+                        print(f"  [warn] {acc['email']} already belongs to {clash.first_name} "
+                              f"{clash.last_name} ({clash.employee_number}); leaving "
+                              f"{acc['employee_number']} on {user.email}.")
+                    else:
+                        user.email = acc["email"]
                 user.password_hash = generate_password_hash(acc["password"])
                 user.role          = acc["role"]
                 if acc.get("middle_name"):    user.middle_name    = acc["middle_name"]
@@ -669,28 +683,63 @@ def _label12(hhmm: str) -> str:
     return f"{h % 12 or 12}:{mi} {'PM' if h >= 12 else 'AM'}"
 
 
+def _merge_blocks(rows) -> list[list]:
+    """Turn raw matrix rows into merged [day_idx, start, end, shift] blocks.
+    Back-to-back shift blocks on the same day become one continuous slot
+    (Morning + Afternoon -> 07:30-17:30). Rows are sorted by day then start."""
+    blocks = []
+    for row in rows:
+        day_idx = DAY_NAME_TO_INDEX.get(_clean(row["day_of_week"]))
+        if day_idx is None:
+            continue
+        blocks.append((
+            day_idx,
+            _hhmm(_clean(row["start_time"])),
+            _hhmm(_clean(row["end_time"])),
+            _clean(row.get("shift_block")),
+        ))
+    blocks.sort(key=lambda b: (b[0], b[1]))
+
+    merged: list[list] = []
+    for day_idx, start, end, shift in blocks:
+        last = merged[-1] if merged else None
+        if last and last[0] == day_idx and last[2] == start:
+            last[2] = end
+            last[3] = shift
+        else:
+            merged.append([day_idx, start, end, shift])
+    return merged
+
+
 def seed_faculty_availability(app):
     """
-    Imports into the REAL availability submission/slot tables (the same
-    ones the chairperson's 'View Availability' UI already reads) rather
-    than a parallel one-off table. Each faculty gets one auto-approved
-    submission for the active semester.
+    Seeds the Faculty Availability Matrix CSV (ALL semesters it contains).
 
-    The availability matrix lists availability per semester (a semester_id
-    column) as separate shift blocks (Morning 07:30-12:30, Afternoon
-    12:30-17:30, Evening 17:30-22:30). Only rows for the ACTIVE semester are
-    seeded. Back-to-back blocks on the same day are merged into one
-    continuous slot (e.g. Morning + Afternoon -> 07:30-17:30), because the
-    CP-SAT solver only counts a 90-minute timetable block as available when
-    it sits fully inside a single slot; leaving the blocks split would drop
-    every class period that straddles a shift boundary (like 12:00-13:30).
-    Older exports without a semester_id column are treated as belonging to
-    the active semester.
+    Active semester  -> a real, auto-approved AvailabilitySubmission with
+                        AvailabilitySlot rows (what the chairperson's 'View
+                        Availability' page and the solver read), plus a history
+                        snapshot so it also shows up in the faculty member's
+                        Availability History.
+    Past semesters   -> history snapshots ONLY (availability_history,
+                        source='matrix'). They are deliberately NOT written to
+                        availability_submissions, so the chairperson pages,
+                        faculty-status checks and the solver keep seeing just
+                        the active semester. Faculty can still reuse them from
+                        Availability History (Load into form / Resubmit).
 
-    Also backfills the legacy per-day flat columns (time_preference_mon
-    etc.). This is a known lossy step: a faculty available in several
-    shifts on the same day can only have ONE value stored in the flat
-    column (the latest shift that day wins).
+    The matrix lists availability as separate shift blocks (Morning 07:30-12:30,
+    Afternoon 12:30-17:30, Evening 17:30-22:30). Back-to-back blocks on the same
+    day are merged into one continuous slot, because the CP-SAT solver only
+    counts a 90-minute timetable block as available when it sits fully inside a
+    single slot.
+
+    Re-running is safe: matrix-sourced history rows are replaced; history rows
+    created by real faculty submissions (source != 'matrix') are never touched.
+    A semester that is not in the Semester table is skipped with a warning.
+
+    Also backfills the legacy per-day flat columns (time_preference_mon etc.)
+    from the ACTIVE semester only. Known lossy step: if a faculty is available
+    in several shifts on one day, the latest shift that day wins.
     """
     df = _read_csv("CCISched-Faculty-Availability-Matrix.csv")
 
@@ -700,91 +749,113 @@ def seed_faculty_availability(app):
             print("  [warn] No active semester - skipping availability import.")
             return
 
-        total_rows = len(df)
         if "semester_id" in df.columns:
-            sem_ids = pd.to_numeric(df["semester_id"], errors="coerce")
-            df = df[sem_ids == active_sem.id]
-        skipped_other_sem = total_rows - len(df)
+            df["semester_id"] = pd.to_numeric(df["semester_id"], errors="coerce")
+            df = df.dropna(subset=["semester_id"])
+            df["semester_id"] = df["semester_id"].astype(int)
+        else:
+            # Older exports have no semester column: treat as the active semester
+            df["semester_id"] = active_sem.id
 
-        by_faculty: dict[int, list] = {}
+        known_sems = {s.id: s for s in Semester.query.all()}
+        unknown = sorted(set(df["semester_id"]) - set(known_sems))
+        if unknown:
+            print(f"  [warn] Matrix references unknown semesters {unknown} - skipped.")
+            df = df[df["semester_id"].isin(known_sems)]
+
+        # {faculty_pk: {semester_id: [rows]}}
+        grouped: dict[int, dict[int, list]] = {}
         for _, row in df.iterrows():
             fid = fa_to_id(row["faculty_id"])
-            by_faculty.setdefault(fid, []).append(row)
+            grouped.setdefault(fid, {}).setdefault(int(row["semester_id"]), []).append(row)
 
-        submissions_created, slots_created = 0, 0
+        submissions_created = slots_created = history_created = 0
+        faculty_seen = 0
 
-        for fid, rows in by_faculty.items():
+        for fid, by_sem in grouped.items():
             user = db.session.get(User, fid)
             if not user or user.role != "faculty":
                 continue
+            faculty_seen += 1
 
-            submission = AvailabilitySubmission.query.filter_by(
-                faculty_id=fid, semester_id=active_sem.id
-            ).first()
-            if submission is None:
-                submission = AvailabilitySubmission(
-                    faculty_id=fid, semester_id=active_sem.id,
-                    status="approved", submitted_at=datetime.now(timezone.utc),
-                    reviewed_at=datetime.now(timezone.utc),
-                )
-                db.session.add(submission)
-                db.session.flush()   # need submission.id before adding slots
-                submissions_created += 1
-            else:
-                # Re-seeding: replace old slots with fresh ones from the CSV
-                AvailabilitySlot.query.filter_by(submission_id=submission.id).delete()
-
-            # (day_idx, start, end, shift) per CSV row, in time order
-            blocks = []
-            for row in rows:
-                day_name = _clean(row["day_of_week"])
-                day_idx  = DAY_NAME_TO_INDEX.get(day_name)
-                if day_idx is None:
+            for sem_id, rows in sorted(by_sem.items()):
+                sem = known_sems[sem_id]
+                merged = _merge_blocks(rows)
+                if not merged:
                     continue
-                blocks.append((
-                    day_idx,
-                    _hhmm(_clean(row["start_time"])),
-                    _hhmm(_clean(row["end_time"])),
-                    _clean(row.get("shift_block")),
-                ))
-            blocks.sort(key=lambda b: (b[0], b[1]))
 
-            # Merge contiguous same-day blocks (end == next start)
-            merged: list[list] = []
-            for day_idx, start, end, shift in blocks:
-                last = merged[-1] if merged else None
-                if last and last[0] == day_idx and last[2] == start:
-                    last[2] = end
-                    last[3] = shift
+                slots_payload = [
+                    {
+                        "slot_number": i,
+                        "day_indices": [day_idx],
+                        "time_start":  start,
+                        "time_end":    end,
+                        "time_label":  f"{_label12(start)} \u2013 {_label12(end)}",
+                    }
+                    for i, (day_idx, start, end, _shift) in enumerate(merged, start=1)
+                ]
+
+                submission_id = None
+                if sem_id == active_sem.id:
+                    now = datetime.now(timezone.utc)
+                    submission = AvailabilitySubmission.query.filter_by(
+                        faculty_id=fid, semester_id=sem_id
+                    ).first()
+                    if submission is None:
+                        submission = AvailabilitySubmission(
+                            faculty_id=fid, semester_id=sem_id, status="approved",
+                            submitted_at=now, reviewed_at=now,
+                        )
+                        db.session.add(submission)
+                        db.session.flush()   # need submission.id before adding slots
+                        submissions_created += 1
+                    else:
+                        # Re-seeding: replace old slots with fresh ones from the CSV
+                        AvailabilitySlot.query.filter_by(submission_id=submission.id).delete()
+
+                    for s in slots_payload:
+                        db.session.add(AvailabilitySlot(
+                            submission_id=submission.id,
+                            slot_number=s["slot_number"],
+                            day_indices=",".join(str(d) for d in s["day_indices"]),
+                            time_start=s["time_start"],
+                            time_end=s["time_end"],
+                            time_label=s["time_label"],
+                        ))
+                        slots_created += 1
+                    submission_id = submission.id
+                    submitted_at = submission.submitted_at
+
+                    day_shift_map = {d: shift for d, _st, _en, shift in merged}
+                    for day_idx, col in enumerate([
+                        "time_preference_mon", "time_preference_tue", "time_preference_wed",
+                        "time_preference_thu", "time_preference_fri", "time_preference_sat",
+                    ]):
+                        setattr(user, col, day_shift_map.get(day_idx, "Not available"))
                 else:
-                    merged.append([day_idx, start, end, shift])
+                    # Past semester: pretend it was submitted two weeks before the term began
+                    submitted_at = (
+                        datetime.combine(sem.start_date, datetime.min.time()).replace(hour=9)
+                        - timedelta(days=14)
+                    ) if sem.start_date else None
 
-            day_shift_map: dict[int, str] = {}   # for the flat-column backfill
-            for i, (day_idx, start, end, shift) in enumerate(merged, start=1):
-                db.session.add(AvailabilitySlot(
-                    submission_id=submission.id,
-                    slot_number=i,
-                    day_indices=str(day_idx),
-                    time_start=start,
-                    time_end=end,
-                    time_label=f"{_label12(start)} \u2013 {_label12(end)}",
+                # Replace only matrix-seeded history for this faculty + semester
+                AvailabilityHistory.query.filter_by(
+                    faculty_id=fid, semester_id=sem_id, source="matrix"
+                ).delete()
+                db.session.add(AvailabilityHistory(
+                    faculty_id=fid, semester_id=sem_id, submission_id=submission_id,
+                    submitted_at=submitted_at, slots_json=json.dumps(slots_payload),
+                    source="matrix",
                 ))
-                slots_created += 1
-                day_shift_map[day_idx] = shift   # latest shift that day wins
-
-            for day_idx, col in enumerate([
-                "time_preference_mon", "time_preference_tue", "time_preference_wed",
-                "time_preference_thu", "time_preference_fri", "time_preference_sat",
-            ]):
-                setattr(user, col, day_shift_map.get(day_idx, "Not available"))
+                history_created += 1
 
         db.session.commit()
-        print(f"  [ok] Availability ({active_sem.academic_year} {active_sem.semester_term}): "
-              f"{submissions_created} submissions, {slots_created} slots across "
-              f"{len(by_faculty)} faculty.")
-        if skipped_other_sem:
-            print(f"  [info] {skipped_other_sem} availability rows belong to other semesters "
-                  f"and were not seeded.")
+        sem_count = df["semester_id"].nunique()
+        print(f"  [ok] Availability matrix: {faculty_seen} faculty across {sem_count} semesters "
+              f"-> {history_created} history entries.")
+        print(f"       Active ({active_sem.academic_year} {active_sem.semester_term}): "
+              f"{submissions_created} new submissions, {slots_created} slots.")
 
 
 # ─────────────────────────────────────────────────────────────
