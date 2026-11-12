@@ -248,8 +248,8 @@
 
 /* ── Scrollable body ── */
 .fl-body {
-  overflow-y: auto;
-  max-height: 380px;
+  /* paginated — no inner scrolling */
+
 }
 
 .fl-body::-webkit-scrollbar { width: 5px; }
@@ -1987,3 +1987,7 @@
 @media (max-width: 640px) {
   .pr-item { flex-direction: column; align-items: flex-start; }
 }
+
+
+/* Pager row at the bottom of the load-summary card */
+.fl-pager-wrap { padding: 0 calc(var(--u, 1rem) * 1.4) calc(var(--u, 1rem) * 1); }

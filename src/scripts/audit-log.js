@@ -5,7 +5,14 @@
 // non-chairpersons away from /chairperson/ pages).
 
 const $ = (id) => document.getElementById(id);
-const state = { page: 1, pages: 1, perPage: 25 };
+const state = { page: 1, pages: 1, perPage: 10 };
+
+// Numbered pagination (server-paged) — replaces the old Prev/Next + long scrolling table
+const pager = Pager.create($('auditPager'), {
+  pageSize: state.perPage,
+  noun: ['entry', 'entries'],
+  onPage: (p) => { state.page = p; load(); },
+});
 
 const topbarDate = $('topbarDate');
 if (topbarDate) {
@@ -35,6 +42,7 @@ function queryString() {
   add('outcome',  $('fOutcome').value);
   add('date_from', $('fFrom').value);
   add('date_to',   $('fTo').value);
+  add('sort', $('fSort').value);   // '' = newest first, 'oldest' = oldest first
   add('q', $('auditSearch').value.trim());
   return p;
 }
@@ -72,10 +80,7 @@ function render(data) {
   }
   state.page  = data.page;
   state.pages = data.pages || 1;
-  $('auditCount').textContent = `${data.total} entr${data.total === 1 ? 'y' : 'ies'}`;
-  $('pageLabel').textContent  = `Page ${state.page} of ${state.pages}`;
-  $('prevBtn').disabled = state.page <= 1;
-  $('nextBtn').disabled = state.page >= state.pages;
+  pager.set({ total: data.total, page: state.page });
 }
 
 async function load() {
@@ -100,9 +105,24 @@ async function loadFilters() {
   } catch (err) { console.error('[audit filters]', err); }
 }
 
-function refilter() { state.page = 1; load(); }
+function syncSortUi() {
+  const oldest = $('fSort').value === 'oldest';
+  $('sortArrow').textContent = oldest ? '↑' : '↓';
+  $('sortTime').setAttribute('aria-sort', oldest ? 'ascending' : 'descending');
+}
 
-['fUser', 'fRole', 'fCategory', 'fOutcome', 'fFrom', 'fTo']
+function refilter() { syncSortUi(); state.page = 1; load(); }
+
+function toggleSort() {
+  $('fSort').value = $('fSort').value === 'oldest' ? '' : 'oldest';
+  refilter();
+}
+$('sortTime').addEventListener('click', toggleSort);
+$('sortTime').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleSort(); }
+});
+
+['fUser', 'fRole', 'fCategory', 'fOutcome', 'fSort', 'fFrom', 'fTo']
   .forEach((id) => $(id).addEventListener('change', refilter));
 
 let searchTimer;
@@ -112,12 +132,10 @@ $('auditSearch').addEventListener('input', () => {
 });
 
 $('resetBtn').addEventListener('click', () => {
-  ['fUser', 'fRole', 'fCategory', 'fOutcome', 'fFrom', 'fTo', 'auditSearch']
+  ['fUser', 'fRole', 'fCategory', 'fOutcome', 'fSort', 'fFrom', 'fTo', 'auditSearch']
     .forEach((id) => { $(id).value = ''; });
   refilter();
 });
-$('prevBtn').addEventListener('click', () => { if (state.page > 1) { state.page--; load(); } });
-$('nextBtn').addEventListener('click', () => { if (state.page < state.pages) { state.page++; load(); } });
 
 // CSV export — needs the session cookie, so fetch as a blob rather than a plain link.
 $('exportBtn').addEventListener('click', async () => {

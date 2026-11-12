@@ -626,3 +626,7 @@
 .af-locked-link:hover {
   text-decoration: underline;
 }
+
+/* The shared shell hides topbars that have no search box; the Add/Edit
+   Availability pages use the topbar for their breadcrumb, so keep it. */
+.topbar.topbar--slim:not(:has(.topbar__search)) { display: flex; }

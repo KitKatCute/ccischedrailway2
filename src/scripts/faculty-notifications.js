@@ -27,6 +27,18 @@ let notifications = [];
 let activeFilter  = 'all';
 let searchQuery   = '';
 
+// Pagination — only on pages that include <div id="notifPager"> (chairperson).
+// Without it (faculty page) every matching notification stays visible, as before.
+const NOTIF_PAGE_SIZE = 6;
+let notifPage = 1;
+const notifPager = (typeof Pager !== 'undefined' && document.getElementById('notifPager'))
+  ? Pager.create(document.getElementById('notifPager'), {
+      pageSize: NOTIF_PAGE_SIZE,
+      noun: ['notification', 'notifications'],
+      onPage: (p) => { notifPage = p; applyFilters(); },
+    })
+  : null;
+
 function getItems() {
   return [...list.querySelectorAll('.notif-item')];
 }
@@ -184,6 +196,7 @@ function formatNotificationDateTime(dateValue) {
 //    search and vice versa, instead of one silently overwriting the other ──
 function applyFilters() {
   const q = searchQuery.trim().toLowerCase();
+  const matched = [];
   getItems().forEach(item => {
     const inTab = activeFilter === 'all'    ? true :
                   activeFilter === 'unread' ? item.classList.contains('notif-item--unread') :
@@ -193,8 +206,17 @@ function applyFilters() {
                   item.querySelector('.notif-item__msg')?.textContent).toLowerCase();
     const inSearch = !q || text.includes(q);
 
-    item.style.display = (inTab && inSearch) ? '' : 'none';
+    if (inTab && inSearch) matched.push(item);
+    item.style.display = 'none';
   });
+
+  // Show only the current page of the matching notifications
+  let shown = matched;
+  if (notifPager) {
+    notifPage = notifPager.set({ total: matched.length, page: notifPage });
+    shown = matched.slice((notifPage - 1) * NOTIF_PAGE_SIZE, notifPage * NOTIF_PAGE_SIZE);
+  }
+  shown.forEach(item => { item.style.display = ''; });
   checkEmpty();
 }
 
@@ -203,12 +225,14 @@ document.querySelectorAll('.notif-tab').forEach(tab => {
     document.querySelectorAll('.notif-tab').forEach(t => t.classList.remove('notif-tab--active'));
     tab.classList.add('notif-tab--active');
     activeFilter = tab.dataset.filter;
+    notifPage = 1;
     applyFilters();
   });
 });
 
 document.getElementById('notifSearch')?.addEventListener('input', function () {
   searchQuery = this.value;
+  notifPage = 1;
   applyFilters();
 });
 
@@ -233,7 +257,7 @@ list.addEventListener('click', async (e) => {
   setTimeout(() => {
     item.remove();
     syncUnreadBadge();
-    checkEmpty();
+    applyFilters();
   }, 200);
 });
 
@@ -294,7 +318,7 @@ document.getElementById('clearAllBtn')?.addEventListener('click', async () => {
   setTimeout(() => {
     list.innerHTML = '';
     syncUnreadBadge();
-    checkEmpty();
+    applyFilters();
   }, 220);
 });
 
