@@ -11,7 +11,7 @@
 // After deploying the backend on Railway, replace the placeholder below with
 // its public URL (keep the trailing "/api"), e.g.
 //   "https://ccisched-backend.up.railway.app/api"
-const PRODUCTION_API_URL = "https://backend-production-35dd.up.railway.app/api";
+const PRODUCTION_API_URL = "https://ccischedrailway2-production.up.railway.app/api";
 const IS_LOCAL_HOST = ["localhost", "127.0.0.1", ""].includes(window.location.hostname);
 const API_BASE = window.API_BASE || (IS_LOCAL_HOST ? "http://localhost:5000/api" : PRODUCTION_API_URL);
 
