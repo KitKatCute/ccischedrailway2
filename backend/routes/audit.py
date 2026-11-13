@@ -67,6 +67,9 @@ def _filtered_query():
     except ValueError:
         pass
 
+    # Sort by date/time: newest first (default) or oldest first.
+    if request.args.get("sort") == "oldest":
+        return q.order_by(AuditLog.created_at.asc(), AuditLog.id.asc())
     return q.order_by(AuditLog.created_at.desc(), AuditLog.id.desc())
 
 
