@@ -115,6 +115,26 @@ document.getElementById('notifBtn')?.addEventListener('click', () => {
 // ─────────────────────────────────────────────
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S'];
 
+// ── Time of day: morning < 12:00 PM · afternoon 12:00–5:00 PM · night from 5:00 PM ──
+const PERIOD_ICONS = {
+  morning:   '<svg class="slot__period-icon" width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 12h12M4.5 12a3.5 3.5 0 0 1 7 0M8 3v2M3.6 5.6l1.3 1.3M12.4 5.6l-1.3 1.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  afternoon: '<svg class="slot__period-icon" width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.8" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.8v1.6M8 12.6v1.6M1.8 8h1.6M12.6 8h1.6M3.6 3.6l1.1 1.1M11.3 11.3l1.1 1.1M3.6 12.4l1.1-1.1M11.3 4.7l1.1-1.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  night:     '<svg class="slot__period-icon" width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M13.2 9.6A5.6 5.6 0 0 1 6.4 2.8a5.6 5.6 0 1 0 6.8 6.8Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>'
+};
+const PERIOD_NAMES = { morning: 'Morning', afternoon: 'Afternoon', night: 'Night' };
+
+// Which parts of the day a slot's time range covers, in order. A period only
+// counts if the slot spends at least an hour in it (12:30–5:30 PM is an
+// "afternoon" slot, not afternoon + night); the period it starts in always counts.
+function slotPeriods(slot) {
+  const r = AvailabilityUtils.slotRange ? AvailabilityUtils.slotRange(slot) : null;
+  if (!r) return [];
+  const bands = [['morning', 0, 12 * 60], ['afternoon', 12 * 60, 17 * 60], ['night', 17 * 60, 24 * 60]];
+  const overlap = (lo, hi) => Math.min(r.end, hi) - Math.max(r.start, lo);
+  const startBand = bands.find(([, lo, hi]) => r.start >= lo && r.start < hi)[0];
+  return bands.filter(([name, lo, hi]) => name === startBand || overlap(lo, hi) >= 60).map(([name]) => name);
+}
+
 function renderSlots() {
   const container = document.getElementById('slotsContainer');
   if (!container) return;
@@ -139,9 +159,10 @@ function renderSlots() {
   slots.forEach((slot, idx) => {
     const slotNum = slot.slot_number || (idx + 1);
     const isFirst = idx === 0;
+    const periods = slotPeriods(slot);
 
     const daysHTML = DAY_LABELS.map((lbl, i) => {
-      const active = slot.day_indices && slot.day_indices.includes(i) ? 'day--active' : '';
+      const active = slot.day_indices && slot.day_indices.includes(i) ? `day--active day--d${i}` : '';
       return `<span class="day ${active}" tabindex="0">${lbl}</span>`;
     }).join('');
 
@@ -183,11 +204,9 @@ function renderSlots() {
       </div>
       <div class="slot__row">
         <div class="slot__days">${daysHTML}</div>
-        <button class="slot__time" type="button"${finalized ? ' disabled style="cursor:default;opacity:0.85;"' : ''}>
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-            <circle cx="7" cy="7" r="5.5" stroke="white" stroke-width="1.4"/>
-            <path d="M7 4V7L9.5 9" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
-          </svg>
+        <button class="slot__time slot__time--${periods.join('-') || 'none'}" type="button"${finalized ? ' disabled style="cursor:default;opacity:0.85;"' : ''}
+                title="${periods.map(pp => PERIOD_NAMES[pp]).join(' → ') || 'Time'}">
+          ${periods.length ? periods.map(pp => PERIOD_ICONS[pp]).join('') : PERIOD_ICONS.afternoon}
           <span class="slot__time-text">${AvailabilityUtils.slotLabel(slot) || 'Select time'}</span>
         </button>
       </div>`;

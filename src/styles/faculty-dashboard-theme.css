@@ -1,0 +1,221 @@
+/* =====================================================================
+   CCISched — Faculty Dashboard theme
+   Makes the faculty dashboard match the chairperson dashboard.
+   Linked ONLY from faculty/dashboard.html, AFTER faculty-dashboard.css,
+   chairperson-dashboard.css and chairperson-shell.css (which already give
+   the white sidebar, bell-in-sidebar and white greeting banner).
+   This file restyles the cards + profile panel that are faculty-specific.
+===================================================================== */
+
+/* ── Layout: lower grid mirrors .cp-layout ── */
+.lower-grid {
+  grid-template-columns: 1fr clamp(280px, calc(var(--u) * 17.5), 480px);
+  gap: calc(var(--u) * 1.2);
+  align-items: stretch;
+  flex: 1;
+}
+.stat-cards { gap: calc(var(--u) * 1.2); }
+
+/* ── Cards: same border / padding / hover as .cp-card ── */
+.stat-card,
+.avail-card {
+  border: 2px solid var(--cp-line);
+  box-shadow: var(--shadow-sm);
+}
+.stat-card {
+  padding: calc(var(--u) * 1.1) calc(var(--u) * 1.5);
+  gap: calc(var(--u) * 1);
+}
+.avail-card {
+  padding: calc(var(--u) * 1.3) calc(var(--u) * 1.7);
+  gap: calc(var(--u) * 0.9);
+}
+.stat-card--clickable { transition: all 0.2s ease; }
+.stat-card--clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(128, 0, 0, 0.12);
+  border-color: rgba(128, 0, 0, 0.32);
+}
+
+/* icon tiles use the soft rose tint from the chairperson palette */
+.stat-card__icon {
+  width: calc(var(--u) * 3.2);
+  height: calc(var(--u) * 3.2);
+  background: var(--cp-rose-lt);
+  border: 2px solid rgba(128, 0, 0, 0.14);
+}
+.stat-card__icon svg { width: calc(var(--u) * 1.45); height: calc(var(--u) * 1.45); }
+
+/* labels read like the chairperson card titles */
+.stat-card__label {
+  font-size: calc(var(--u) * 0.7);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(128, 0, 0, 0.62);
+}
+.stat-card__value {
+  font-size: calc(var(--u) * 1.15);
+  font-weight: 900;
+  color: var(--maroon);
+}
+.stat-card__badge { font-size: calc(var(--u) * 0.68); }
+.stat-card__badge--blue { background: var(--cp-sand-lt); color: var(--cp-sand-dk); }
+
+/* availability card header */
+.avail-card__header-icon {
+  background: var(--cp-rose-lt);
+  border: 2px solid rgba(128, 0, 0, 0.14);
+}
+.avail-card__title {
+  font-size: calc(var(--u) * 0.88);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--maroon);
+}
+.avail-card__sub  { font-size: calc(var(--u) * 0.74); }
+.avail-card__note { font-size: calc(var(--u) * 0.82); }
+
+/* ── Profile panel: same fluid sizing + blue accent as .cp-profile ── */
+.profile-panel {
+  padding: calc(var(--u) * 1.8) calc(var(--u) * 1.2) calc(var(--u) * 1.6);
+  gap: calc(var(--u) * 0.6);
+  justify-content: space-evenly;
+  align-self: stretch;
+  border: none;
+}
+.profile-panel__avatar-wrap {
+  width: calc(var(--u) * 7.2);
+  height: calc(var(--u) * 7.2);
+  border-width: 4px;
+  border-color: rgba(255, 255, 255, 0.4);
+  margin-bottom: calc(var(--u) * 0.3);
+}
+.profile-panel__avatar-wrap svg { width: 62%; height: 62%; }
+.profile-panel__name { font-size: calc(var(--u) * 1.3); }
+.profile-panel__role {
+  font-size: calc(var(--u) * 0.95);
+  color: var(--cp-on-dark-accent);
+  margin-bottom: calc(var(--u) * 0.5);
+}
+.btn-edit-profile {
+  font-size: calc(var(--u) * 0.78);
+  padding: calc(var(--u) * 0.65) calc(var(--u) * 1.4);
+  gap: calc(var(--u) * 0.45);
+}
+.btn-edit-profile svg { width: calc(var(--u) * 0.9); height: calc(var(--u) * 0.9); }
+.profile-panel__divider { margin: calc(var(--u) * 0.3) 0; }
+
+.profile-stats { gap: calc(var(--u) * 0.45); }
+.profile-stat {
+  padding: calc(var(--u) * 0.9) calc(var(--u) * 0.25);
+  gap: calc(var(--u) * 0.2);
+  border-radius: calc(var(--u) * 0.8);
+}
+.profile-stat__val { font-size: calc(var(--u) * 1.3); }
+.profile-stat__lbl { font-size: calc(var(--u) * 0.68); }
+
+.upcoming            { gap: calc(var(--u) * 0.85); }
+.upcoming__title     { font-size: calc(var(--u) * 0.82); }
+.upcoming__item      { gap: calc(var(--u) * 0.7); }
+.upcoming__dot       { width: calc(var(--u) * 0.7); height: calc(var(--u) * 0.7); }
+.upcoming__dot--gold { background: #8FB0D4; }
+.upcoming__label     { font-size: calc(var(--u) * 0.95); }
+.upcoming__time      { font-size: calc(var(--u) * 0.8); }
+
+/* ── Narrow screens: stack like the chairperson page ── */
+@media (max-width: 1100px) {
+  .lower-grid    { grid-template-columns: 1fr; }
+  .profile-panel { flex-direction: row; flex-wrap: wrap; align-self: auto; justify-content: center; }
+}
+
+
+/* =====================================================================
+   AVAILABILITY SLOTS — a colour per weekday + a colour per time of day
+===================================================================== */
+
+/* Weekday chips (active ones only; inactive stay neutral grey) */
+.day--d0 { --day: #C0392B; }   /* Mon — red    */
+.day--d1 { --day: #2E8B57; }   /* Tue — green  */
+.day--d2 { --day: #2E86C1; }   /* Wed — blue   */
+.day--d3 { --day: #8E44AD; }   /* Thu — purple */
+.day--d4 { --day: #D81B7A; }   /* Fri — magenta*/
+.day--d5 { --day: #16908F; }   /* Sat — teal   */
+.day--active[class*="day--d"] {
+  background: var(--day);
+  border-color: var(--day);
+  color: var(--white);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--day) 35%, transparent);
+}
+.day--active[class*="day--d"]:hover { color: var(--white); border-color: var(--day); }
+
+/* Time-of-day pills
+   NOTE: faculty-dashboard.css declares `button.slot__time { all: unset; background: maroon }`
+   (specificity 0,1,1), so these rules must be `button.slot__time.slot__time--*`
+   (0,2,1) to win — including the :hover state. */
+button.slot__time {
+  gap: 6px;
+  border: 1.5px solid transparent;
+}
+.slot__period-icon { flex-shrink: 0; }
+button.slot__time.slot__time--morning,
+button.slot__time.slot__time--morning:hover {   /* sunrise — warm gold */
+  background: #FFF1BF;
+  border-color: #F2B01E;
+  color: #7A4F00;
+}
+button.slot__time.slot__time--afternoon,
+button.slot__time.slot__time--afternoon:hover { /* full sun — sky blue */
+  background: #DCEFFF;
+  border-color: #5BA8E0;
+  color: #0B5A8C;
+}
+button.slot__time.slot__time--night,
+button.slot__time.slot__time--night:hover {     /* moon — deep navy */
+  background: #1F2A5C;
+  border-color: #1F2A5C;
+  color: #FFFFFF;
+}
+button.slot__time.slot__time--none { background: var(--maroon); color: var(--white); }
+
+/* Multi-period slots — gradient running through each period it covers, in order.
+   Class is slot__time--<period>-<period>[-<period>] (see faculty-dashboard.js). */
+button.slot__time.slot__time--morning-afternoon,
+button.slot__time.slot__time--morning-afternoon:hover {
+  background: linear-gradient(90deg, #FFE48A 0%, #DCEFFF 100%);
+  background-origin: border-box;
+  border-color: #5BA8E0;
+  color: #3B3A1E;
+}
+button.slot__time.slot__time--afternoon-night,
+button.slot__time.slot__time--afternoon-night:hover {
+  background: linear-gradient(90deg, #5BA8E0 0%, #1F2A5C 100%);
+  background-origin: border-box;
+  border-color: #1F2A5C;
+  color: #FFFFFF;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+button.slot__time.slot__time--morning-afternoon-night,
+button.slot__time.slot__time--morning-afternoon-night:hover {
+  background: linear-gradient(90deg, #F2B01E 0%, #5BA8E0 50%, #1F2A5C 100%);
+  background-origin: border-box;
+  border-color: #1F2A5C;
+  color: #FFFFFF;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+/* Legend above the slot list */
+.slot-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--u) * 0.5) calc(var(--u) * 1.2);
+  font-size: calc(var(--u) * 0.74);
+  font-weight: 700;
+  color: rgba(60, 20, 20, 0.75);
+}
+.slot-legend__item { display: inline-flex; align-items: center; gap: 6px; }
+.slot-legend__dot  { width: 11px; height: 11px; border-radius: 50%; border: 2px solid; }
+.slot-legend__item--morning   .slot-legend__dot { background: #FFF1BF; border-color: #F2B01E; }
+.slot-legend__item--afternoon .slot-legend__dot { background: #DCEFFF; border-color: #5BA8E0; }
+.slot-legend__item--night     .slot-legend__dot { background: #1F2A5C; border-color: #1F2A5C; }

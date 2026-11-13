@@ -94,18 +94,35 @@ function statusBadgesHtml(f) {
   return badges.join('');
 }
 
+// Pagination — the list pages instead of scrolling
+const FACULTY_PAGE_SIZE = 8;
+let facultyPage = 1;
+const facultyPager = Pager.create(document.getElementById('facultyPager'), {
+  pageSize: FACULTY_PAGE_SIZE,
+  noun: ['instructor', 'instructors'],
+  onPage: (p) => { facultyPage = p; renderRows(activeFilter, searchQuery); },
+});
+
 function renderRows(filter = 'all', query = '') {
   if (!facultyList) return;
   facultyList.innerHTML = '';
 
   const q = query.trim().toLowerCase();
 
+  // keep each faculty member's original index (the row buttons use it)
+  const matches = [];
   facultyData.forEach((f, idx) => {
     const matchFilter = filter === 'all' || f.type === filter;
     const matchQuery  = !q || f.name.toLowerCase().includes(q) || f.type.toLowerCase().includes(q) ||
                         f.designation.toLowerCase().includes(q) ||
                         f.teachingAssignment.toLowerCase().includes(q);
-    if (!matchFilter || !matchQuery) return;
+    if (matchFilter && matchQuery) matches.push([f, idx]);
+  });
+
+  facultyPage = facultyPager ? facultyPager.set({ total: matches.length, page: facultyPage }) : 1;
+  const pageRows = matches.slice((facultyPage - 1) * FACULTY_PAGE_SIZE, facultyPage * FACULTY_PAGE_SIZE);
+
+  pageRows.forEach(([f, idx]) => {
 
     const pct = Math.min((f.load / f.max) * 100, 100).toFixed(1);
     const over = f.load >= f.max;
@@ -180,11 +197,13 @@ loadFacultyList();
 
 document.getElementById('typeFilter')?.addEventListener('change', function () {
   activeFilter = this.value;
+  facultyPage = 1;
   renderRows(activeFilter, searchQuery);
 });
 
 document.getElementById('facultySearch')?.addEventListener('input', function () {
   searchQuery = this.value;
+  facultyPage = 1;
   renderRows(activeFilter, searchQuery);
 });
 

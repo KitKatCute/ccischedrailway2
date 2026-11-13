@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/faculty-dashboard.css" />
   <link rel="stylesheet" href="../styles/chairperson-courses.css" />
+  <link rel="stylesheet" href="../styles/chairperson-shell.css" />
   <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg" />
 </head>
 <body>
@@ -20,6 +21,13 @@
     ════════════════════════════════════ -->
     <aside class="sidebar">
 
+      <button class="topbar__icon-btn sidebar__bell" id="notifBtn" title="Notifications">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#800000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#800000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="notif-badge" style="display:none;">0</span>
+          </button>
       <div class="sidebar__logo">
         <img src="../assets/images/logo.svg" alt="CCISched logo" width="38" height="38" />
         <span class="sidebar__logo-text">CCISCHED</span>
@@ -137,32 +145,14 @@
 
       <!-- ── HEADER BAR ── -->
       <header class="topbar">
-        <div class="topbar__search">
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-            <circle cx="7" cy="7" r="5" stroke="#AAAAAA" stroke-width="1.6"/>
-            <path d="M11 11L14 14" stroke="#AAAAAA" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
-          <input type="text" placeholder="Search schedule, availability, notifications…" class="topbar__input" id="globalSearch" />
-        </div>
-
-        <div class="topbar__right">
-          <span class="topbar__date" id="topbarDate"></span>
-
-          <button class="topbar__icon-btn" id="notifBtn" title="Notifications">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#800000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#800000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="notif-badge" style="display:none;">0</span>
-          </button>
-        </div>
       </header>
 
       <!-- ── PAGE BODY ── -->
       <div class="page-body">
 
-        <!-- ── Top action bar ── -->
-        <div class="crs-topbar">
+        <!-- ── Course Summary card ── -->
+        <div class="crs-summary-card">
+          <p class="crs-summary-card__title">COURSE SUMMARY</p>
           <button class="crs-manage-btn" id="manageBtn">
             <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
               <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/>
@@ -170,25 +160,20 @@
             </svg>
             Manage Course Offerings
           </button>
-        </div>
-
-        <!-- ── Course Summary card ── -->
-        <div class="crs-summary-card">
-          <p class="crs-summary-card__title">COURSE SUMMARY</p>
-          <div class="crs-summary-stats">
-            <div class="crs-stat">
-              <p class="crs-stat__val" id="statCourses">50</p>
-              <p class="crs-stat__lbl" id="statCoursesLbl">COURSES</p>
+            <div class="crs-summary-stats">
+              <div class="crs-stat">
+                <p class="crs-stat__val" id="statCourses">50</p>
+                <p class="crs-stat__lbl" id="statCoursesLbl">COURSES</p>
+              </div>
+              <div class="crs-stat">
+                <p class="crs-stat__val" id="statSections">78</p>
+                <p class="crs-stat__lbl">TOTAL SECTIONS</p>
+              </div>
+              <div class="crs-stat">
+                <p class="crs-stat__val" id="statAssigned">31</p>
+                <p class="crs-stat__lbl">SECTIONS ASSIGNED</p>
+              </div>
             </div>
-            <div class="crs-stat">
-              <p class="crs-stat__val" id="statSections">78</p>
-              <p class="crs-stat__lbl">TOTAL SECTIONS</p>
-            </div>
-            <div class="crs-stat">
-              <p class="crs-stat__val" id="statAssigned">31</p>
-              <p class="crs-stat__lbl">SECTIONS ASSIGNED</p>
-            </div>
-          </div>
         </div>
 
         <!-- ── Lower two-column grid ── -->
@@ -233,6 +218,7 @@
                 </tbody>
               </table>
             </div>
+            <div id="crsPager"></div>
           </div>
 
           <!-- RIGHT: Section assignment coverage -->
@@ -244,6 +230,7 @@
             <div class="crs-coverage-list" id="coverageList">
               <!-- items injected by JS -->
             </div>
+            <div id="covPager"></div>
             <div class="crs-coverage-footer">
               <a href="section-coverage-detail.html" class="crs-see-all-link">
                 See Full Details
@@ -264,6 +251,7 @@
   <script src="../scripts/api.js"></script>
   <script src="../scripts/auth-check.js"></script>
   <script src="../scripts/notif-badge.js"></script>
+  <script src="../scripts/paginator.js"></script>
   <script src="../scripts/chairperson-courses.js"></script>
 </body>
 </html>

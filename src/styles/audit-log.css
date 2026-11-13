@@ -63,3 +63,8 @@
 
 .audit-pager { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 0.75rem; color: #777; }
 .audit-pager > div { display: flex; align-items: center; gap: 10px; }
+
+/* Sortable "Time" column header */
+.audit-th-sort { cursor: pointer; user-select: none; white-space: nowrap; }
+.audit-th-sort:hover, .audit-th-sort:focus-visible { color: var(--maroon); outline: none; }
+.audit-sort-arrow { display: inline-block; margin-left: 4px; font-size: 0.85em; color: var(--maroon); }

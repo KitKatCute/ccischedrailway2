@@ -202,10 +202,11 @@ async function loadDashboard() {
 
     // Helper: pick tier color based on pct (low=green, mid=amber, high=maroon)
     function tierColor(pct) {
-      if (pct >= 100) return { dot: '#B05555', text: '#954040' };
-      if (pct >= 50)  return { dot: '#F0BB5A', text: '#C9931A' };
-      if (pct > 0)    return { dot: '#6BBF8E', text: '#4DA872' };
-      return { dot: 'rgba(255,255,255,0.30)', text: 'rgba(255,255,255,0.45)' };
+      const v = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+      if (pct >= 100) return { dot: v('--cp-od-high'), text: v('--cp-od-high-tx') };
+      if (pct >= 50)  return { dot: v('--cp-od-mid'),  text: v('--cp-od-mid-tx')  };
+      if (pct > 0)    return { dot: v('--cp-od-low'),  text: v('--cp-od-low-tx')  };
+      return { dot: 'rgba(255,255,255,0.30)', text: 'rgba(255,255,255,0.55)' };
     }
 
     function applyOverviewTier(dotId, valueEl, pct) {
@@ -223,9 +224,13 @@ async function loadDashboard() {
 
     // ── Unassigned sections (flatten every uncovered section across courses) ──
     const unassigned = [];
+    const bySection  = {};   // section label -> number of unassigned courses
     coverage.courses.forEach(course => {
       course.sections.forEach(sec => {
-        if (!sec.assignedTo) unassigned.push(`${course.code}: ${course.name} (${sec.label})`);
+        if (!sec.assignedTo) {
+          unassigned.push(`${course.code}: ${course.name} (${sec.label})`);
+          bySection[sec.label] = (bySection[sec.label] || 0) + 1;
+        }
       });
     });
     if (overviewUnassigned) overviewUnassigned.textContent = `${unassigned.length} Section${unassigned.length === 1 ? '' : 's'}`;
@@ -234,9 +239,11 @@ async function loadDashboard() {
     const barChart = document.getElementById('availBarChart');
     if (barChart) {
       barChart.innerHTML = '';
-      const maxVal    = Math.max(submittedCount, pendingCount, 1);
-      const maxHeight = 100;
+      const maxVal = Math.max(submittedCount, pendingCount, 1);
       [submittedCount, pendingCount].forEach((val, idx) => {
+        const col = document.createElement('div');
+        col.className = 'cp-bar-col';
+
         const bar = document.createElement('div');
         bar.className = 'cp-bar';
         // Color tier on submitted bar (idx=0) based on submission rate
@@ -246,33 +253,61 @@ async function loadDashboard() {
           else if (ratio >= 50) bar.classList.add('cp-bar--yellow');
           else if (ratio > 0)   bar.classList.add('cp-bar--green');
         }
-        bar.style.height = '4px';
+        bar.style.height = '2%';
         bar.setAttribute('title', (idx === 0 ? 'Submitted' : 'Pending') + ': ' + val);
-        barChart.appendChild(bar);
+
+        const num = document.createElement('span');
+        num.className = 'cp-bar__val';
+        num.textContent = val;
+        bar.appendChild(num);
+
+        col.appendChild(bar);
+        barChart.appendChild(col);
         setTimeout(() => {
-          bar.style.height = Math.round((val / maxVal) * maxHeight) + 'px';
+          bar.style.height = Math.max(Math.round((val / maxVal) * 100), 2) + '%';
         }, 150 + idx * 80);
       });
     }
 
-    // ── Unassigned Courses list (cap to keep the card a reasonable size) ──
-    const list = document.getElementById('unassignedList');
-    if (list) {
-      list.innerHTML = '';
-      const MAX_SHOWN = 6;
-      unassigned.slice(0, MAX_SHOWN).forEach(entry => {
-        const li = document.createElement('li');
-        li.textContent = entry;
-        list.appendChild(li);
-      });
-      if (unassigned.length === 0) {
-        const li = document.createElement('li');
-        li.textContent = 'All sections are covered.';
-        list.appendChild(li);
-      } else if (unassigned.length > MAX_SHOWN) {
-        const li = document.createElement('li');
-        li.textContent = `+ ${unassigned.length - MAX_SHOWN} more`;
-        list.appendChild(li);
+    // ── Unassigned Courses metric graph: unassigned courses per section ──
+    const barsEl   = document.getElementById('unassignedBars');
+    const topName  = document.getElementById('topSectionName');
+    const topCount = document.getElementById('topSectionCount');
+    const topUnit  = document.getElementById('topSectionUnit');
+    if (barsEl) {
+      barsEl.innerHTML = '';
+      const ranked = Object.entries(bySection).sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]));
+      if (ranked.length === 0) {
+        if (topName)  topName.textContent  = 'All covered';
+        if (topCount) topCount.textContent = '0';
+        if (topUnit)  topUnit.textContent  = 'courses unassigned';
+      } else {
+        const [topLabel, topVal] = ranked[0];
+        if (topName)  topName.textContent  = topLabel;
+        if (topCount) topCount.textContent = topVal;
+        if (topUnit)  topUnit.textContent  = topVal === 1 ? 'course unassigned' : 'courses unassigned';
+
+        const MAX_BARS = 6;
+        ranked.slice(0, MAX_BARS).forEach(([label, val], idx) => {
+          const row = document.createElement('div');
+          row.className = 'cp-hbar' + (idx === 0 ? ' cp-hbar--top' : '');
+          row.innerHTML =
+            '<span class="cp-hbar__label"></span>' +
+            '<span class="cp-hbar__track"><span class="cp-hbar__fill"></span></span>' +
+            '<span class="cp-hbar__val"></span>';
+          row.querySelector('.cp-hbar__label').textContent = label;
+          row.querySelector('.cp-hbar__val').textContent   = val;
+          row.title = `${label}: ${val} unassigned`;
+          barsEl.appendChild(row);
+          const fillEl = row.querySelector('.cp-hbar__fill');
+          setTimeout(() => { fillEl.style.width = Math.round((val / topVal) * 100) + '%'; }, 150 + idx * 70);
+        });
+        if (ranked.length > MAX_BARS) {
+          const more = document.createElement('p');
+          more.className = 'cp-hbars__more';
+          more.textContent = `+ ${ranked.length - MAX_BARS} more section${ranked.length - MAX_BARS === 1 ? '' : 's'}`;
+          barsEl.appendChild(more);
+        }
       }
     }
 

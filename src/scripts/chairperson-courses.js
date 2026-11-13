@@ -74,11 +74,24 @@ function updateOfferedLabel() {
   lbl.textContent = `COURSES · ${offered} OFFERED`;
 }
 
+// Pagination — the lists page instead of scrolling
+const COURSE_PAGE_SIZE   = 8;
+const COVERAGE_PAGE_SIZE = 12;
+let coursePage   = 1;
+let coveragePage = 1;
+let COVERAGE_ROWS = [];          // offered courses, as returned by /coverage
+
+const coursePager = Pager.create(document.getElementById('crsPager'), {
+  pageSize: COURSE_PAGE_SIZE,
+  noun: ['course', 'courses'],
+  onPage: (p) => { coursePage = p; renderTable(activeFilter, searchQuery); },
+});
+
 function renderTable(filter = 'all', query = '') {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  COURSES.forEach(course => {
+  const matches = COURSES.filter(course => {
     const isElective = course.classification.toLowerCase().includes('elective');
     const isCS = course.program === 'CS';
     const matchFilter = filter === 'all' ||
@@ -95,8 +108,14 @@ function renderTable(filter = 'all', query = '') {
       course.title.toLowerCase().includes(query) ||
       course.classification.toLowerCase().includes(query);
 
-    if (!matchFilter || !matchOffer || !matchQuery) return;
+    return matchFilter && matchOffer && matchQuery;
+  });
 
+  coursePage = coursePager ? coursePager.set({ total: matches.length, page: coursePage }) : 1;
+  const visible = matches.slice((coursePage - 1) * COURSE_PAGE_SIZE, coursePage * COURSE_PAGE_SIZE);
+
+  visible.forEach(course => {
+    const n = sectionCount(course.code);
     let offeringCell = '<span class="crs-badge crs-badge--not-offered">…</span>';
     if (n !== null) {
       offeringCell = n > 0
@@ -127,6 +146,7 @@ document.querySelectorAll('.crs-offer-pill').forEach(pill => {
     document.querySelectorAll('.crs-offer-pill').forEach(p => p.classList.remove('crs-offer-pill--active'));
     pill.classList.add('crs-offer-pill--active');
     activeOffer = pill.dataset.offer;
+    coursePage = 1;
     renderTable(activeFilter, searchQuery);
   });
 });
@@ -136,6 +156,7 @@ document.querySelectorAll('.crs-filter-pill').forEach(pill => {
     document.querySelectorAll('.crs-filter-pill').forEach(p => p.classList.remove('crs-filter-pill--active'));
     pill.classList.add('crs-filter-pill--active');
     activeFilter = pill.dataset.filter;
+    coursePage = 1;
     renderTable(activeFilter, searchQuery);
   });
 });
@@ -145,6 +166,7 @@ document.querySelectorAll('.crs-filter-pill').forEach(pill => {
 // ─────────────────────────────────────────────
 document.getElementById('crsSearch')?.addEventListener('input', function () {
   searchQuery = this.value.trim().toLowerCase();
+  coursePage = 1;
   renderTable(activeFilter, searchQuery);
 });
 
@@ -153,6 +175,53 @@ document.getElementById('crsSearch')?.addEventListener('input', function () {
 // ─────────────────────────────────────────────
 const coverageList  = document.getElementById('coverageList');
 const overallBadge  = document.getElementById('overallBadge');
+
+const coveragePager = Pager.create(document.getElementById('covPager'), {
+  pageSize: COVERAGE_PAGE_SIZE,
+  noun: ['course', 'courses'],
+  onPage: (p) => { coveragePage = p; renderCoverage(); },
+});
+
+function renderCoverage() {
+  if (!coverageList) return;
+  coverageList.innerHTML = '';
+  coveragePage = coveragePager ? coveragePager.set({ total: COVERAGE_ROWS.length, page: coveragePage }) : 1;
+  const visible = COVERAGE_ROWS.slice((coveragePage - 1) * COVERAGE_PAGE_SIZE, coveragePage * COVERAGE_PAGE_SIZE);
+
+  visible.forEach(course => {
+    const row = document.createElement('div');
+    const pct = course.totalSections > 0
+      ? (course.coveredSections / course.totalSections) * 100
+      : 0;
+
+    // Color tier based on coverage percentage — low=green, partial=yellow, full=maroon
+    let tierClass = '';
+    if (pct === 0)         tierClass = '';                        // grey default
+    else if (pct >= 100)   tierClass = 'crs-cov-fill--maroon';   // fully covered
+    else if (pct >= 50)    tierClass = 'crs-cov-fill--yellow';   // partially covered
+    else                   tierClass = 'crs-cov-fill--green';    // low coverage
+    row.className = 'crs-cov-row';
+    row.innerHTML = `
+      <span class="crs-cov-name" title="${course.name}">${course.name}</span>
+      <div class="crs-cov-track">
+        <div class="crs-cov-fill ${tierClass}" data-covered="${course.coveredSections}" data-total="${course.totalSections}"></div>
+      </div>
+      <span class="crs-cov-pct ${tierClass ? tierClass.replace('crs-cov-fill', 'crs-cov-pct') : ''}">${course.coveredSections}/${course.totalSections}</span>
+    `;
+    coverageList.appendChild(row);
+  });
+
+  // Animate bars in after paint
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      coverageList.querySelectorAll('.crs-cov-fill').forEach(fill => {
+        const covered = parseInt(fill.dataset.covered, 10);
+        const total   = parseInt(fill.dataset.total, 10) || 1;
+        fill.style.width = ((covered / total) * 100).toFixed(1) + '%';
+      });
+    }, 120);
+  });
+}
 
 async function loadCoverage() {
   try {
@@ -168,45 +237,12 @@ async function loadCoverage() {
     animateCount('statSections', total_sections);
     animateCount('statAssigned', sections_covered);
 
-    if (coverageList) {
-      coverageList.innerHTML = '';
-      // Only courses actually offered this semester (have >= 1 section).
-      // Courses with 0 sections (e.g. other-term courses) are not "unassigned",
-      // they just aren't being offered, so they're left out of the coverage bars.
-      data.courses.filter(c => c.totalSections > 0).forEach(course => {
-        const row = document.createElement('div');
-        const pct = course.totalSections > 0
-          ? (course.coveredSections / course.totalSections) * 100
-          : 0;
-
-        // Color tier based on coverage percentage — low=green, partial=yellow, full=maroon
-        let tierClass = '';
-        if (pct === 0)         tierClass = '';                        // grey default
-        else if (pct >= 100)   tierClass = 'crs-cov-fill--maroon';   // fully covered
-        else if (pct >= 50)    tierClass = 'crs-cov-fill--yellow';   // partially covered
-        else                   tierClass = 'crs-cov-fill--green';    // low coverage
-        row.className = 'crs-cov-row';
-        row.innerHTML = `
-          <span class="crs-cov-name" title="${course.name}">${course.name}</span>
-          <div class="crs-cov-track">
-            <div class="crs-cov-fill ${tierClass}" data-covered="${course.coveredSections}" data-total="${course.totalSections}"></div>
-          </div>
-          <span class="crs-cov-pct ${tierClass ? tierClass.replace('crs-cov-fill', 'crs-cov-pct') : ''}">${course.coveredSections}/${course.totalSections}</span>
-        `;
-        coverageList.appendChild(row);
-      });
-
-      // Animate bars in after paint
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          coverageList.querySelectorAll('.crs-cov-fill').forEach(fill => {
-            const covered = parseInt(fill.dataset.covered, 10);
-            const total   = parseInt(fill.dataset.total, 10) || 1;
-            fill.style.width = ((covered / total) * 100).toFixed(1) + '%';
-          });
-        }, 120);
-      });
-    }
+    // Only courses actually offered this semester (have >= 1 section).
+    // Courses with 0 sections (e.g. other-term courses) are not "unassigned",
+    // they just aren't being offered, so they're left out of the coverage bars.
+    COVERAGE_ROWS = data.courses.filter(c => c.totalSections > 0);
+    coveragePage = 1;
+    renderCoverage();
   } catch (err) {
     console.error('[Courses] Failed to load coverage:', err);
   }
