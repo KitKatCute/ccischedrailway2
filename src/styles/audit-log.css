@@ -6,6 +6,8 @@
 .audit-header {
   display: flex; align-items: flex-start; justify-content: space-between;
   gap: 16px; flex-wrap: wrap; margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #E4E4E4;
 }
 .audit-header__title { font-size: 1.25rem; font-weight: 900; color: var(--black); letter-spacing: -0.01em; }
 .audit-header__sub   { font-size: 0.75rem; color: #777; margin-top: 4px; max-width: 620px; }

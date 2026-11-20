@@ -7,6 +7,7 @@ const roleInput      = document.getElementById('roleInput');
 const cardSub        = document.getElementById('cardSub');
 const emailInput     = document.getElementById('email');
 const passwordInput  = document.getElementById('password');
+const forgotLink     = document.getElementById('forgotLink');
 
 // ── Placeholder hints per role ──
 const PLACEHOLDERS = {
@@ -25,6 +26,9 @@ function setRole(role) {
 
   emailInput.placeholder    = PLACEHOLDERS[role].email;
   passwordInput.placeholder = PLACEHOLDERS[role].password;
+
+  // Only faculty can request a reset (the chairperson is who they ask).
+  forgotLink.hidden = role !== 'faculty';
 }
 
 btnChairperson.addEventListener('click', () => setRole('chairperson'));
@@ -124,15 +128,165 @@ form.addEventListener('submit', async (e) => {
       return;
     }
 
-    // Redirect based on role from backend
-    if (user.role === 'chairperson') {
-      window.location.href = 'chairperson/dashboard.html';
-    } else {
-      window.location.href = 'faculty/dashboard.html';
+    // Logged in with an emailed temporary password → must pick a new one first.
+    if (response.must_change_password) {
+      submitBtn.classList.remove('loading');
+      submitBtn.textContent = 'LOGIN';
+      openSetPassword(user);
+      return;
     }
+
+    goToPortal(user);
   } catch (err) {
     submitBtn.classList.remove('loading');
     submitBtn.textContent = 'LOGIN';
     passwordError.textContent = err.message || 'Invalid email or password.';
   }
 });
+
+function goToPortal(user) {
+  // Redirect based on role from backend
+  if (user.role === 'chairperson') {
+    window.location.href = 'chairperson/dashboard.html';
+  } else {
+    window.location.href = 'faculty/dashboard.html';
+  }
+}
+
+// ── Set a new password (after logging in with a temporary one) ──
+const npOverlay = document.getElementById('npOverlay');
+const npForm    = document.getElementById('npForm');
+const npPass    = document.getElementById('npPass');
+const npConfirm = document.getElementById('npConfirm');
+const npError   = document.getElementById('npError');
+const npSubmit  = document.getElementById('npSubmit');
+let npUser = null;
+
+function openSetPassword(user) {
+  npUser = user;
+  npPass.value = npConfirm.value = '';
+  npError.textContent = '';
+  npOverlay.hidden = false;
+  npPass.focus();
+}
+
+// Closing = cancelling: end the half-finished session so they must start again.
+document.getElementById('npClose').addEventListener('click', async () => {
+  await API.logout().catch(() => {});
+  npOverlay.hidden = true;
+  npUser = null;
+  passwordInput.value = '';
+});
+
+[npPass, npConfirm].forEach(el => el.addEventListener('input', () => { npError.textContent = ''; }));
+
+npForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (npPass.value.length < 6)        { npError.textContent = 'At least 6 characters required.'; return; }
+  if (npPass.value !== npConfirm.value) { npError.textContent = 'Passwords do not match.'; return; }
+
+  npSubmit.classList.add('loading');
+  npSubmit.textContent = 'Saving…';
+  try {
+    await API.setNewPassword(npPass.value);
+    goToPortal(npUser);
+  } catch (ex) {
+    npError.textContent = ex.message || 'Could not save the new password. Please try again.';
+    npSubmit.classList.remove('loading');
+    npSubmit.textContent = 'SAVE NEW PASSWORD';
+  }
+});
+
+// ── Forgot password (faculty) ──
+const fpOverlay = document.getElementById('fpOverlay');
+const fpForm    = document.getElementById('fpForm');
+const fpEmail   = document.getElementById('fpEmail');
+const fpError   = document.getElementById('fpError');
+const fpSubmit  = document.getElementById('fpSubmit');
+const fpDone    = document.getElementById('fpDone');
+const fpDoneTxt = document.getElementById('fpDoneText');
+
+function openForgot() {
+  fpForm.hidden = false;
+  fpDone.hidden = true;
+  fpError.textContent = '';
+  fpEmail.value = emailInput.value.trim();   // carry over what they already typed
+  fpOverlay.hidden = false;
+  fpEmail.focus();
+}
+function closeForgot() { fpOverlay.hidden = true; }
+
+forgotLink.addEventListener('click', (e) => { e.preventDefault(); openForgot(); });
+document.getElementById('fpClose').addEventListener('click', closeForgot);
+document.getElementById('fpDoneBtn').addEventListener('click', closeForgot);
+fpOverlay.addEventListener('click', (e) => { if (e.target === fpOverlay) closeForgot(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !fpOverlay.hidden) closeForgot(); });
+fpEmail.addEventListener('input', () => { fpError.textContent = ''; });
+
+fpForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = fpEmail.value.trim();
+  const err = validateEmail(email);
+  if (err) { fpError.textContent = err; return; }
+
+  fpSubmit.classList.add('loading');
+  fpSubmit.textContent = 'Sending…';
+  try {
+    const res = await API.forgotPassword(email);
+    fpForm.hidden = true;
+    fpDone.hidden = false;
+    // Same wording whether or not the email matched an account.
+    fpDoneTxt.textContent = res.message ||
+      'If that email belongs to a faculty account, a temporary password has been emailed to it.';
+  } catch (ex) {
+    fpError.textContent = ex.message || 'Could not send the email. Please try again.';
+  } finally {
+    fpSubmit.classList.remove('loading');
+    fpSubmit.textContent = 'SEND TEMPORARY PASSWORD';
+  }
+});
+
+/* ── Animated timetable grid ── */
+(function () {
+  const grid = document.getElementById('loginTTGrid');
+  if (!grid) return;
+
+  const DAYS = 5, ROWS = 5;
+  const FILLED = [
+    { d:0, r:0, c:'maroon' }, { d:2, r:0, c:'gold'   }, { d:4, r:0, c:'light'  },
+    { d:1, r:1, c:'maroon' }, { d:3, r:1, c:'light'  },
+    { d:0, r:2, c:'gold'   }, { d:2, r:2, c:'maroon' }, { d:4, r:2, c:'gold'   },
+    { d:1, r:3, c:'light'  }, { d:3, r:3, c:'maroon' },
+    { d:0, r:4, c:'maroon' }, { d:2, r:4, c:'light'  }, { d:4, r:4, c:'maroon' },
+  ];
+
+  const cells = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let d = 0; d < DAYS; d++) {
+      const cell = document.createElement('div');
+      cell.className = 'scene__tt-cell';
+      const slot = FILLED.find(f => f.d === d && f.r === r);
+      if (slot) cell.dataset.color = slot.c;
+      grid.appendChild(cell);
+      cells.push(cell);
+    }
+  }
+
+  let idx = 0;
+  function fillNext() {
+    if (idx >= cells.length) { setTimeout(reset, 2000); return; }
+    const cell = cells[idx++];
+    if (cell.dataset.color) {
+      cell.classList.add(`cell--${cell.dataset.color}`);
+    }
+    setTimeout(fillNext, 80);
+  }
+
+  function reset() {
+    cells.forEach(c => { c.className = 'scene__tt-cell'; });
+    idx = 0;
+    setTimeout(fillNext, 500);
+  }
+
+  setTimeout(fillNext, 400);
+})();

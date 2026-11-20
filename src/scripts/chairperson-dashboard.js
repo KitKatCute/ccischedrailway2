@@ -24,6 +24,9 @@ function applyCurrentUserToPage(user) {
 
   const panelRole = document.querySelector('.cp-profile__role');
   if (panelRole) panelRole.textContent = 'Chairperson';
+
+  const portalName = document.getElementById('portalName');
+  if (portalName) portalName.textContent = fullName;
 }
 
 document.addEventListener('authReady', (e) => applyCurrentUserToPage(e.detail));
@@ -33,32 +36,6 @@ if (typeof currentUser !== 'undefined' && currentUser) applyCurrentUserToPage(cu
 document.getElementById('notifBtn')?.addEventListener('click', () => {
   window.location.href = 'notifications.html';
 });
-
-// ─────────────────────────────────────────────
-//  DONUT CHART HELPER
-//  circumference = 2π × r = 2π × 38 ≈ 238.76
-// ─────────────────────────────────────────────
-const CIRCUMFERENCE = 2 * Math.PI * 38; // ≈ 238.76
-
-/**
- * Animate a donut arc to a given percentage.
- * @param {string} fillId  — id of the <circle> fill element
- * @param {string} labelId — id of the label <span>
- * @param {number} pct     — 0–100
- */
-function animateDonut(fillId, labelId, pct) {
-  const fill  = document.getElementById(fillId);
-  const label = document.getElementById(labelId);
-  if (!fill || !label) return;
-
-  const offset = CIRCUMFERENCE - (pct / 100) * CIRCUMFERENCE;
-
-  // Trigger CSS transition by setting after a short delay (allows paint first)
-  requestAnimationFrame(() => {
-    fill.style.strokeDashoffset = offset;
-    label.textContent = pct + '%';
-  });
-}
 
 // ─────────────────────────────────────────────
 //  ACTIVE SEMESTER SWITCH
@@ -151,7 +128,11 @@ async function loadDashboard() {
     const activeSem = semesters.find(s => s.is_active);
     renderSemesterSwitch(semesters, activeSem);
     const statSemesterEl = document.getElementById('statSemesterTerm');
-    if (statSemesterEl) statSemesterEl.textContent = activeSem ? activeSem.semester_term : '—';
+    // Remove "Term" suffix - just show 1st, 2nd, etc.
+    if (statSemesterEl) {
+      const termText = activeSem ? activeSem.semester_term : '—';
+      statSemesterEl.textContent = termText.replace(/\s*Term$/i, '');
+    }
 
     // ── Faculty count ──
     const statFacultyEl = document.getElementById('statFacultyCount');
@@ -173,11 +154,15 @@ async function loadDashboard() {
     const { total_sections, sections_covered } = coverage.totals;
     const coveragePct = total_sections > 0 ? Math.round((sections_covered / total_sections) * 100) : 0;
 
-    // ── Donuts ──
-    setTimeout(() => {
-      animateDonut('donutBSITFill', 'donutBSITLabel', coveragePct);
-      animateDonut('donutBSCSFill', 'donutBSCSLabel', availabilityPct);
-    }, 120);
+    // ── Update stat cards ──
+    const sectionsValueEl = document.getElementById('sectionsValue');
+    if (sectionsValueEl) sectionsValueEl.textContent = sections_covered;
+
+    const facultySubmittedValueEl = document.getElementById('facultySubmittedValue');
+    if (facultySubmittedValueEl) facultySubmittedValueEl.textContent = submittedCount;
+
+    const pendingValueEl = document.getElementById('pendingValue');
+    if (pendingValueEl) pendingValueEl.textContent = pendingCount;
 
     // ── Quick Overview ──
     const overviewCoverage    = document.getElementById('overviewCoverage');
@@ -195,44 +180,8 @@ async function loadDashboard() {
     });
     if (overviewUnassigned) overviewUnassigned.textContent = `${unassigned.length} Section${unassigned.length === 1 ? '' : 's'}`;
 
-    // ── Faculty Availability bar chart ──
-    const barChart = document.getElementById('availBarChart');
-    if (barChart) {
-      barChart.innerHTML = '';
-      const maxVal    = Math.max(submittedCount, pendingCount, 1);
-      const maxHeight = 100;
-      [submittedCount, pendingCount].forEach((val, idx) => {
-        const bar = document.createElement('div');
-        bar.className = 'cp-bar';
-        bar.style.height = '4px';
-        bar.setAttribute('title', (idx === 0 ? 'Submitted' : 'Pending') + ': ' + val);
-        barChart.appendChild(bar);
-        setTimeout(() => {
-          bar.style.height = Math.round((val / maxVal) * maxHeight) + 'px';
-        }, 150 + idx * 80);
-      });
-    }
-
-    // ── Unassigned Courses list (cap to keep the card a reasonable size) ──
-    const list = document.getElementById('unassignedList');
-    if (list) {
-      list.innerHTML = '';
-      const MAX_SHOWN = 6;
-      unassigned.slice(0, MAX_SHOWN).forEach(entry => {
-        const li = document.createElement('li');
-        li.textContent = entry;
-        list.appendChild(li);
-      });
-      if (unassigned.length === 0) {
-        const li = document.createElement('li');
-        li.textContent = 'All sections are covered.';
-        list.appendChild(li);
-      } else if (unassigned.length > MAX_SHOWN) {
-        const li = document.createElement('li');
-        li.textContent = `+ ${unassigned.length - MAX_SHOWN} more`;
-        list.appendChild(li);
-      }
-    }
+    const unassignedValueEl = document.getElementById('unassignedValue');
+    if (unassignedValueEl) unassignedValueEl.textContent = unassigned.length;
 
   } catch (err) {
     console.error('[Dashboard] Failed to load:', err);

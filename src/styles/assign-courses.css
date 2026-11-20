@@ -7,37 +7,22 @@
 }
 
 .back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: none;
-  color: var(--maroon);
-  font-family: 'Raleway', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: background 0.2s;
-  margin-bottom: 16px;
-}
-
-.back-btn:hover {
-  background: rgba(128, 0, 0, 0.08);
+  display: none;
 }
 
 .page-title {
   font-size: 1.80rem;
   font-weight: 900;
-  color: var(--maroon);
+  color: var(--black);
   margin: 0 0 8px 0;
 }
 
 .page-subtitle {
   font-size: 0.92rem;
-  color: rgba(128, 0, 0, 0.65);
+  color: #888888;
   margin: 0;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #E4E4E4;
 }
 
 /* ═══════════════════════════════════
@@ -52,7 +37,7 @@
 
 .assign-stat {
   background: var(--white);
-  border: 2px solid rgba(128, 0, 0, 0.18);
+  border: 2px solid var(--maroon);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-sm);
   padding: 20px 24px;
@@ -62,7 +47,7 @@
 .assign-stat__val {
   font-size: 2rem;
   font-weight: 900;
-  color: var(--maroon);
+  color: var(--black);
   margin: 0 0 4px 0;
   line-height: 1;
 }
@@ -71,7 +56,7 @@
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: rgba(128, 0, 0, 0.55);
+  color: #888888;
   text-transform: uppercase;
   margin: 0;
 }
@@ -110,7 +95,7 @@
 .panel-title {
   font-size: 1.00rem;
   font-weight: 900;
-  color: var(--maroon);
+  color: var(--black);
   margin: 0;
   letter-spacing: 0.02em;
 }
@@ -216,7 +201,7 @@
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.06em;
-  color: rgba(128, 0, 0, 0.55);
+  color: #888888;
   text-transform: uppercase;
   margin: 0;
 }
@@ -224,7 +209,7 @@
 .course-name {
   font-size: 0.90rem;
   font-weight: 800;
-  color: var(--maroon);
+  color: var(--black);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -333,7 +318,7 @@
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.07em;
-  color: rgba(128, 0, 0, 0.55);
+  color: #888888;
   text-transform: uppercase;
   margin: 0 0 8px 0;
 }
@@ -341,13 +326,13 @@
 .selected-course__name {
   font-size: 1.00rem;
   font-weight: 900;
-  color: var(--maroon);
+  color: var(--black);
   margin: 0 0 4px 0;
 }
 
 .selected-course__meta {
   font-size: 0.78rem;
-  color: rgba(128, 0, 0, 0.60);
+  color: #888888;
   margin: 0;
 }
 
@@ -362,7 +347,7 @@
   font-size: 0.80rem;
   font-weight: 800;
   letter-spacing: 0.04em;
-  color: var(--maroon);
+  color: var(--black);
 }
 
 .form-select {

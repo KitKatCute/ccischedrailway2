@@ -116,12 +116,12 @@
 
       <!-- TOPBAR -->
       <header class="topbar">
-        <div class="topbar__search">
+        <div class="topbar__search" style="visibility: hidden;">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
             <circle cx="7" cy="7" r="5" stroke="#AAAAAA" stroke-width="1.6"/>
             <path d="M11 11L14 14" stroke="#AAAAAA" stroke-width="1.6" stroke-linecap="round"/>
           </svg>
-          <input type="text" id="searchInput" placeholder="Search faculty name…" class="topbar__input" />
+          <input type="text" placeholder="Search faculty name…" class="topbar__input" />
         </div>
         <div class="topbar__right">
           <span class="topbar__date" id="topbarDate"></span>
@@ -189,6 +189,17 @@
             <span class="cs-card__count" id="csCount">— faculty</span>
           </div>
 
+          <!-- Search bar -->
+          <div class="cs-card__search">
+            <div class="cs-search-wrap">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                <circle cx="7" cy="7" r="5" stroke="#AAAAAA" stroke-width="1.6"/>
+                <path d="M11 11L14 14" stroke="#AAAAAA" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+              <input type="text" id="searchInput" placeholder="Search faculty, loads…" class="cs-search-input" />
+            </div>
+          </div>
+
           <!-- Column headers -->
           <div class="cs-col-headers">
             <span class="cs-col cs-col--name">FACULTY NAME</span>
@@ -201,6 +212,30 @@
 
           <!-- Rows injected by JS -->
           <div class="cs-body" id="csBody"></div>
+
+          <!-- Pagination footer -->
+          <div class="cs-pagination">
+            <div class="cs-pagination__info">
+              Showing <span id="csPaginationStart">1</span> to <span id="csPaginationEnd">5</span> of <span id="csPaginationTotal">0</span> entries
+            </div>
+            <div class="cs-pagination__controls">
+              <button class="cs-pagination__btn cs-pagination__btn--prev" id="csPrevPage" disabled>
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                  <path d="M8 10L4 6L8 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Previous
+              </button>
+              <div class="cs-pagination__pages" id="csPaginationPages">
+                <!-- Page numbers injected by JS -->
+              </div>
+              <button class="cs-pagination__btn cs-pagination__btn--next" id="csNextPage">
+                Next
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                  <path d="M4 2L8 6L4 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
 
         </div>
 

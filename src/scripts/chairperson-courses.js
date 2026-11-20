@@ -175,13 +175,23 @@ async function loadCoverage() {
       // they just aren't being offered, so they're left out of the coverage bars.
       data.courses.filter(c => c.totalSections > 0).forEach(course => {
         const row = document.createElement('div');
+        const pct = course.totalSections > 0
+          ? (course.coveredSections / course.totalSections) * 100
+          : 0;
+
+        // Color tier based on coverage percentage — low=green, partial=yellow, full=maroon
+        let tierClass = '';
+        if (pct === 0)         tierClass = '';                        // grey default
+        else if (pct >= 100)   tierClass = 'crs-cov-fill--maroon';   // fully covered
+        else if (pct >= 50)    tierClass = 'crs-cov-fill--yellow';   // partially covered
+        else                   tierClass = 'crs-cov-fill--green';    // low coverage
         row.className = 'crs-cov-row';
         row.innerHTML = `
           <span class="crs-cov-name" title="${course.name}">${course.name}</span>
           <div class="crs-cov-track">
-            <div class="crs-cov-fill" data-covered="${course.coveredSections}" data-total="${course.totalSections}"></div>
+            <div class="crs-cov-fill ${tierClass}" data-covered="${course.coveredSections}" data-total="${course.totalSections}"></div>
           </div>
-          <span class="crs-cov-pct">${course.coveredSections}/${course.totalSections}</span>
+          <span class="crs-cov-pct ${tierClass ? tierClass.replace('crs-cov-fill', 'crs-cov-pct') : ''}">${course.coveredSections}/${course.totalSections}</span>
         `;
         coverageList.appendChild(row);
       });

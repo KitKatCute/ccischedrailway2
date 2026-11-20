@@ -18,12 +18,13 @@ from __future__ import annotations
 
 
 from database import db
+from scope import chairpersons_for
 from models import (AvailabilitySubmission, FacultyAssignment, Notification,
                     Schedule, Semester, User)
 
 
-def _notify_chairpersons(notif_type: str, title: str, message: str):
-    chairs = User.query.filter_by(role="chairperson").all()
+def _notify_chairpersons(notif_type: str, title: str, message: str, faculty: User | None = None):
+    chairs = chairpersons_for([faculty.id] if faculty else None)
     for chair in chairs:
         db.session.add(Notification(
             user_id    = chair.id,
@@ -125,6 +126,7 @@ def sync_faculty_status(academic_year: str | None = None, commit: bool = True) -
                     "Faculty Inactive",
                     f"{fac.first_name} {fac.last_name} has not submitted any "
                     f"availability for AY {academic_year}.",
+                    faculty=fac,
                 )
                 newly_flagged += 1
 
@@ -142,6 +144,7 @@ def sync_faculty_status(academic_year: str | None = None, commit: bool = True) -
                     "No Teaching Load Assigned",
                     f"{fac.first_name} {fac.last_name} has no schedule "
                     f"assigned for AY {academic_year}.",
+                    faculty=fac,
                 )
                 newly_flagged += 1
 

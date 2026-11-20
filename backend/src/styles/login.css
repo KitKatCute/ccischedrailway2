@@ -1,0 +1,737 @@
+/* =============================================
+   CCISched — Login Page
+   Maroon full-page bg · card left · illustration right
+============================================= */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --dark:     #800000;
+  --mid:      #6B0000;
+  --dk2:      #4A0000;
+  --gold:     #FFB81C;
+  --white:    #FFFFFF;
+  --bg-right: #F0EBEB;
+  --border:   #DDD0D0;
+  --text:     #2A0000;
+  --muted:    #9A7070;
+}
+
+html, body { height: 100%; }
+
+/* =============================================
+   FULL-PAGE BACKGROUND — PUP campus with white overlay
+============================================= */
+body {
+  font-family: 'Raleway', sans-serif;
+  min-height: 100vh;
+  background: url('../assets/images/pup-campus-bg.jpg') center/cover no-repeat fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.80);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* =============================================
+   BACKGROUND ANIMATIONS
+============================================= */
+
+@keyframes gridDrift {
+  0%   { background-position: 0 0; }
+  100% { background-position: 72px 72px; }
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+  50%       { opacity: 0.8; transform: translate(-50%, -50%) scale(1.15); }
+}
+
+@keyframes blobFloat1 {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(60px, -80px) scale(1.08); }
+  66%  { transform: translate(-40px, 50px) scale(0.95); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes blobFloat2 {
+  0%   { transform: translate(0, 0) scale(1); }
+  40%  { transform: translate(-70px, 60px) scale(1.1); }
+  75%  { transform: translate(50px, -40px) scale(0.92); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes blobFloat3 {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(40px, 70px) scale(1.05); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  display: none; /* Hidden to show body background image */
+}
+
+/* Drifting grid — maroon on white */
+.bg__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(128,0,0,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(128,0,0,0.05) 1px, transparent 1px);
+  background-size: 72px 72px;
+  animation: gridDrift 12s linear infinite;
+}
+
+/* Pulsing center glow */
+.bg__glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 900px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(128,0,0,0.06) 0%, transparent 70%);
+  animation: glowPulse 6s ease-in-out infinite;
+}
+
+/* Floating blobs */
+.bg__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+}
+
+.bg__blob--1 {
+  width: 520px;
+  height: 520px;
+  top: -140px;
+  left: -120px;
+  background: radial-gradient(circle, rgba(128,0,0,0.07) 0%, transparent 70%);
+  animation: blobFloat1 18s ease-in-out infinite;
+}
+
+.bg__blob--2 {
+  width: 440px;
+  height: 440px;
+  bottom: -120px;
+  right: -100px;
+  background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+  animation: blobFloat2 22s ease-in-out infinite;
+}
+
+.bg__blob--3 {
+  width: 320px;
+  height: 320px;
+  top: 40%;
+  right: 18%;
+  background: radial-gradient(circle, rgba(128,0,0,0.05) 0%, transparent 70%);
+  animation: blobFloat3 15s ease-in-out infinite;
+}
+
+/* =============================================
+   PAGE LAYOUT — card left, illustration right
+============================================= */
+.page {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1200px;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 80px;
+  padding: 40px 6% 40px 4%;
+}
+
+/* =============================================
+   CARD — two-column (maroon hero | light form)
+============================================= */
+.card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 760px;
+  min-height: 620px;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow:
+    0 20px 60px rgba(128,0,0,0.10),
+    0 4px 16px rgba(0,0,0,0.06);
+}
+
+/* ── Left hero panel ── */
+.panel--left {
+  background: linear-gradient(160deg, #4A0000 0%, #800000 55%, #6B0000 100%);
+  padding: 40px 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+.panel__glow {
+  position: absolute;
+  bottom: -60px;
+  right: -60px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(112,0,0,0.6) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.panel__logo {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel__logo span {
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: var(--white);
+}
+
+.panel__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel__eyebrow {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.85;
+}
+
+.panel__title {
+  font-size: 2.4rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--white);
+  letter-spacing: -0.01em;
+}
+
+.panel__desc {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.7;
+  max-width: 240px;
+}
+
+.panel__btn {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 9px 20px;
+  border: 1.5px solid rgba(255,255,255,0.35);
+  border-radius: 50px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--dark);
+  background: var(--white);
+  text-decoration: none;
+  width: fit-content;
+  transition: all 0.2s ease;
+}
+
+.panel__btn:hover {
+  background: var(--white);
+  border-color: var(--white);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+  color: #800000;
+}
+
+/* ── Right form panel ── */
+.panel--right {
+  background: var(--bg-right);
+  padding: 44px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.form__heading {
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.form__sub {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--mid);
+  margin-bottom: 16px;
+}
+
+/* Role toggle */
+.role-toggle {
+  display: flex;
+  background: rgba(128,0,0,0.08);
+  border-radius: 50px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 20px;
+  border: 1.5px solid rgba(128,0,0,0.12);
+  width: 100%;
+}
+
+.role-toggle__btn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 50px;
+  border: none;
+  background: transparent;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.22s ease;
+  white-space: nowrap;
+}
+
+.role-toggle__btn:hover { color: #800000; }
+
+.role-toggle__btn.active {
+  background: #800000;
+  color: var(--white);
+  box-shadow: 0 3px 10px rgba(128,0,0,0.3);
+}
+
+/* Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.form__group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+}
+
+.form__label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  text-transform: uppercase;
+  padding-left: 2px;
+}
+
+.form__field {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.75);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 0 14px;
+  height: 48px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.form__field:focus-within {
+  border-color: #800000;
+  background: var(--white);
+}
+
+.form__icon {
+  display: flex;
+  align-items: center;
+  color: #BBAAAA;
+  margin-right: 10px;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.form__field:focus-within .form__icon { color: #800000; }
+
+.form__input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.form__input::placeholder {
+  color: #CCBBBB;
+  font-size: 0.8rem;
+}
+
+.form__eye {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: #BBAAAA;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.form__eye:hover { color: #800000; }
+
+.form__error {
+  font-size: 0.64rem;
+  font-weight: 600;
+  color: #CC0000;
+  padding-left: 2px;
+  min-height: 16px;
+}
+
+.btn-login {
+  width: 100%;
+  margin-top: 6px;
+  padding: 13px;
+  background: #800000;
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 20px rgba(128,0,0,0.35);
+}
+
+.btn-login:hover {
+  background: #6B0000;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(128,0,0,0.45);
+}
+
+.btn-login:active { transform: translateY(0); }
+
+.btn-login.loading {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Forgot password link + modal */
+.form__forgot {
+  align-self: flex-end;
+  margin-top: -6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #800000;
+  text-decoration: none;
+  letter-spacing: 0.03em;
+}
+.form__forgot[hidden] { display: none; }
+.form__forgot:hover { text-decoration: underline; }
+
+.fp-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(30, 0, 0, 0.65);
+}
+.fp-overlay[hidden] { display: none; }
+
+.fp-modal {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background: var(--white);
+  border-radius: 16px;
+  padding: 28px 28px 24px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fp-modal__title {
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #800000;
+}
+
+.fp-modal__text {
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.fp-modal__close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+}
+.fp-modal__close:hover { color: #800000; }
+
+/* =============================================
+   RIGHT SCENE — animated timetable
+============================================= */
+
+@keyframes cellPop {
+  0%   { transform: scale(0.5); opacity: 0; }
+  70%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+@keyframes fadeSlideUp {
+  0%   { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ttFloat {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(128,0,0,0.15); }
+  50%       { box-shadow: 0 0 0 10px rgba(128,0,0,0); }
+}
+
+.scene {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  animation: ttFloat 6s ease-in-out infinite;
+}
+
+/* Main timetable card */
+.scene__tt-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(128,0,0,0.10);
+  border-radius: 20px;
+  padding: 20px 22px;
+  box-shadow: 0 12px 40px rgba(128,0,0,0.10);
+  width: 300px;
+}
+
+.scene__tt-title {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(128,0,0,0.40);
+  margin-bottom: 14px;
+}
+
+.scene__tt-days {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.scene__tt-day {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(128,0,0,0.30);
+  text-align: center;
+}
+
+.scene__tt-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+}
+
+.scene__tt-cell {
+  height: 22px;
+  border-radius: 5px;
+  background: rgba(128,0,0,0.06);
+  opacity: 0;
+}
+
+.scene__tt-cell.cell--maroon {
+  background: #800000;
+  animation: cellPop 0.3s ease forwards;
+}
+
+.scene__tt-cell.cell--gold {
+  background: #FFB81C;
+  animation: cellPop 0.3s ease forwards;
+}
+
+.scene__tt-cell.cell--light {
+  background: rgba(128,0,0,0.20);
+  animation: cellPop 0.3s ease forwards;
+}
+
+/* Status badge floating card */
+.scene__badge-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(128,0,0,0.10);
+  border-radius: 14px;
+  padding: 10px 16px;
+  box-shadow: 0 8px 24px rgba(128,0,0,0.08);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 300px;
+  animation: fadeSlideUp 0.6s ease 1.8s both;
+}
+
+.scene__badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6BBF8E;
+  flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite 2s;
+}
+
+.scene__badge-text {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: rgba(128,0,0,0.60);
+}
+
+.scene__badge-text span {
+  color: #800000;
+  font-weight: 900;
+}
+
+/* Faculty chip row */
+.scene__chips {
+  display: flex;
+  gap: 8px;
+  width: 300px;
+  animation: fadeSlideUp 0.6s ease 2.2s both;
+}
+
+.scene__chip {
+  flex: 1;
+  background: #FFFFFF;
+  border: 1px solid rgba(128,0,0,0.10);
+  border-radius: 10px;
+  padding: 8px 10px;
+  box-shadow: 0 4px 12px rgba(128,0,0,0.06);
+  text-align: center;
+}
+
+.scene__chip-val {
+  display: block;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #800000;
+}
+
+.scene__chip-lbl {
+  display: block;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(128,0,0,0.40);
+  margin-top: 2px;
+}
+
+/* =============================================
+   RESPONSIVE
+============================================= */
+@media (max-width: 900px) {
+  .page {
+    flex-direction: column;
+    gap: 36px;
+    padding: 40px 24px;
+  }
+  .scene {
+    width: 280px;
+    height: 280px;
+    order: -1;
+  }
+  .scene__ring--1 { width: 200px; height: 200px; }
+  .scene__ring--2 { width: 270px; height: 270px; }
+  .scene__orbit-dot--1 { animation-name: none; }
+  .scene__orbit-dot--2 { animation-name: none; }
+  .scene__orbit-dot--3 { animation-name: none; }
+  .scene__card { display: none; }
+}
+
+@media (max-width: 640px) {
+  .card {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    border-radius: 20px;
+  }
+  .panel--left {
+    padding: 32px 28px;
+    min-height: 200px;
+  }
+  .panel__title { font-size: 1.8rem; }
+  .panel--right { padding: 32px 28px; }
+  .scene { display: none; }
+}

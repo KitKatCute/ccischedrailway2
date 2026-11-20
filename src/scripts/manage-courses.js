@@ -17,6 +17,9 @@ document.getElementById('notifBtn')?.addEventListener('click', () => {
 //  DATA — loaded from the real backend
 // ─────────────────────────────────────────────
 let courses = [];
+let filteredCourses = [];
+let currentPage = 1;
+const itemsPerPage = 5;
 
 async function loadCourses() {
   try {
@@ -31,11 +34,95 @@ async function loadCourses() {
       sections:       c.sections,
       description:    c.description || '',
     }));
-    renderRows();
+    filteredCourses = [...courses];
+    renderPage();
   } catch (err) {
     showToast('Failed to load courses: ' + err.message, 'error');
   }
 }
+
+// ─────────────────────────────────────────────
+//  SEARCH FUNCTIONALITY
+// ─────────────────────────────────────────────
+const searchInput = document.getElementById('courseSearchInput');
+if (searchInput) {
+  searchInput.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase().trim();
+    
+    if (searchTerm === '') {
+      filteredCourses = [...courses];
+    } else {
+      filteredCourses = courses.filter(course => 
+        course.code.toLowerCase().includes(searchTerm) ||
+        course.title.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    currentPage = 1; // Reset to first page when searching
+    renderPage();
+  });
+}
+
+// ─────────────────────────────────────────────
+//  PAGINATION
+// ─────────────────────────────────────────────
+function renderPage() {
+  renderRows();
+  renderPagination();
+}
+
+function renderPagination() {
+  const totalItems = filteredCourses.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const start = (currentPage - 1) * itemsPerPage + 1;
+  const end = Math.min(currentPage * itemsPerPage, totalItems);
+
+  // Update info text
+  document.getElementById('paginationStart').textContent = totalItems > 0 ? start : 0;
+  document.getElementById('paginationEnd').textContent = end;
+  document.getElementById('paginationTotal').textContent = totalItems;
+
+  // Update buttons
+  const prevBtn = document.getElementById('prevPageBtn');
+  const nextBtn = document.getElementById('nextPageBtn');
+  
+  if (prevBtn) prevBtn.disabled = currentPage === 1;
+  if (nextBtn) nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+
+  // Render page numbers
+  const numbersContainer = document.getElementById('paginationNumbers');
+  if (numbersContainer) {
+    numbersContainer.innerHTML = '';
+    
+    for (let i = 1; i <= totalPages; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'mc-pagination__number';
+      if (i === currentPage) btn.classList.add('mc-pagination__number--active');
+      btn.textContent = i;
+      btn.addEventListener('click', () => {
+        currentPage = i;
+        renderPage();
+      });
+      numbersContainer.appendChild(btn);
+    }
+  }
+}
+
+// Pagination button handlers
+document.getElementById('prevPageBtn')?.addEventListener('click', () => {
+  if (currentPage > 1) {
+    currentPage--;
+    renderPage();
+  }
+});
+
+document.getElementById('nextPageBtn')?.addEventListener('click', () => {
+  const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
+  if (currentPage < totalPages) {
+    currentPage++;
+    renderPage();
+  }
+});
 
 // ─────────────────────────────────────────────
 //  RENDER TABLE
@@ -46,7 +133,14 @@ function renderRows() {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  courses.forEach((course, idx) => {
+  // Calculate which courses to show on current page
+  const startIdx = (currentPage - 1) * itemsPerPage;
+  const endIdx = startIdx + itemsPerPage;
+  const pageCourses = filteredCourses.slice(startIdx, endIdx);
+
+  pageCourses.forEach((course, pageIdx) => {
+    // Find the actual index in the full courses array
+    const actualIdx = courses.findIndex(c => c.id === course.id);
     const tr = document.createElement('tr');
 
     tr.innerHTML = `
@@ -58,7 +152,7 @@ function renderRows() {
       <td class="mc-td--center">${course.sections}</td>
       <td class="mc-td--center">
         <div class="mc-actions">
-          <button class="mc-action-btn mc-action-btn--sections" data-idx="${idx}" title="Manage Sections">
+          <button class="mc-action-btn mc-action-btn--sections" data-idx="${actualIdx}" title="Manage Sections">
             <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
               <rect x="2" y="2" width="4" height="4" rx="0.7" stroke="currentColor" stroke-width="1.3"/>
               <rect x="8" y="2" width="4" height="4" rx="0.7" stroke="currentColor" stroke-width="1.3"/>
@@ -66,12 +160,12 @@ function renderRows() {
               <rect x="8" y="8" width="4" height="4" rx="0.7" stroke="currentColor" stroke-width="1.3"/>
             </svg>
           </button>
-          <button class="mc-action-btn mc-action-btn--edit" data-idx="${idx}" title="Edit">
+          <button class="mc-action-btn mc-action-btn--edit" data-idx="${actualIdx}" title="Edit">
             <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
               <path d="M9.5 2.5L11.5 4.5L4.5 11.5H2.5V9.5L9.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
             </svg>
           </button>
-          <button class="mc-action-btn mc-action-btn--delete" data-idx="${idx}" title="Delete">
+          <button class="mc-action-btn mc-action-btn--delete" data-idx="${actualIdx}" title="Delete">
             <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
               <path d="M2 3.5h10M5 3.5V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v1M5.5 6v4.5M8.5 6v4.5M3 3.5l.5 8a1 1 0 001 1h5a1 1 0 001-1l.5-8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
@@ -112,7 +206,14 @@ tbody?.addEventListener('click', e => {
       row.style.opacity = '0';
       setTimeout(() => {
         courses.splice(idx, 1);
-        renderRows();
+        // Update filtered courses as well
+        filteredCourses = filteredCourses.filter(c => c.id !== course.id);
+        // Adjust current page if needed
+        const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
+        if (currentPage > totalPages && currentPage > 1) {
+          currentPage = totalPages;
+        }
+        renderPage();
         showToast('Course removed.');
       }, 180);
     }).catch(err => {

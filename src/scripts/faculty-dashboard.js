@@ -92,10 +92,10 @@ function applyCurrentUserToPage(user) {
   const panelRole = document.querySelector('.profile-panel__role');
   if (panelRole) panelRole.textContent = user.role === 'chairperson' ? 'Chairperson' : 'Faculty';
 
-  // Avatar follows the gender saved on the profile (was hardcoded to female).
+  // Avatar — use star.png (the only available avatar image)
   const avatarImg = document.querySelector('.profile-panel__avatar-img');
-  if (avatarImg && (user.gender === 'male' || user.gender === 'female')) {
-    avatarImg.src = `../assets/images/avatar-${user.gender}.svg`;
+  if (avatarImg) {
+    avatarImg.src = `../assets/images/star.png`;
   }
 }
 
@@ -234,12 +234,12 @@ function renderSlots() {
   if (addSlotBtn) {
     if (finalized) {
       addSlotBtn.disabled = true;
-      addSlotBtn.classList.add('btn-add-avail--locked');
+      addSlotBtn.classList.add('avail-portal-btn--locked');
       addSlotBtn.title   = 'Submission has been finalized';
       addSlotBtn.onclick = null;
     } else {
       addSlotBtn.disabled = false;
-      addSlotBtn.classList.remove('btn-add-avail--locked');
+      addSlotBtn.classList.remove('avail-portal-btn--locked');
       addSlotBtn.onclick = () => { window.location.href = 'add-availability.html'; };
     }
   }
@@ -277,6 +277,7 @@ function renderAvailStatBadge() {
 // ─────────────────────────────────────────────
 const TERM_LABEL = { '1st': '1st Sem', '2nd': '2nd Sem', 'summer': 'Summer' };
 const TERM_LONG  = { '1st': '1st Semester', '2nd': '2nd Semester', 'summer': 'Summer' };
+const TERM_STAT  = { '1st': '1st', '2nd': '2nd', 'summer': 'Summer' };
 const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
 
 function renderSemester() {
@@ -299,7 +300,8 @@ function renderSemester() {
   setText('availCardSub', `${short} · AY ${ay.replace('-', '–')}`);
   setText('semStatValue', short);
   setText('semStatBadge', `AY ${ayShort}`);
-  setText('termStat',     term === '1st' || term === '2nd' ? term : short);
+  // Profile card is narrow, so show just "1st" / "2nd" / "Summer" (label says "Semester")
+  setText('termStat', TERM_STAT[term] || String(sem.semester_term || '—'));
 }
 
 // Same counting rules as teaching-assignments.js so both pages always agree:
@@ -334,6 +336,10 @@ function renderSlotList() {
   const slots = AvailabilityUtils.sortSlots
     ? AvailabilityUtils.sortSlots(availabilityData?.submission?.slots || [])
     : (availabilityData?.submission?.slots || []);
+  // Profile card "Slots" stat. renderSlots() used to set this, but it returns
+  // early because the dashboard has no #slotsContainer, so set it here.
+  // availabilityData is null only if the fetch failed — show a dash, not a false 0.
+  setText('slotCountStat', availabilityData ? String(slots.length) : '—');
   if (!slots.length) {
     box.innerHTML = '<p class="upcoming__empty" style="font-size:.72rem;opacity:.7;">No availability added yet.</p>';
     return;

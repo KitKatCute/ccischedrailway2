@@ -141,20 +141,31 @@
       <!-- PAGE BODY -->
       <div class="page-body">
 
-        <!-- ══ OVERVIEW CARD ══ -->
-        <div class="ga-overview-card">
-          <div class="ga-overview-card__header">
-            <p class="ga-overview-card__title">GENERATED &nbsp; FACULTY ASSIGNMENT OVERVIEW</p>
-            <p class="ga-overview-card__sub">Review and approve assignments per semester</p>
-          </div>
-          <div class="ga-overview-card__body">
-            <div class="ga-program-tile">
-              <p class="ga-program-tile__name">BSCS</p>
-              <p class="ga-program-tile__pct">100% ASSIGNED</p>
+        <!-- ══ STAT CARDS ROW ══ -->
+        <div class="ga-stat-cards">
+          <div class="ga-stat-card">
+            <div class="ga-stat-card__icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                <path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             </div>
-            <div class="ga-program-tile">
-              <p class="ga-program-tile__name">BSIT</p>
-              <p class="ga-program-tile__pct">100% ASSIGNED</p>
+            <div class="ga-stat-card__content">
+              <p class="ga-stat-card__label">BSCS</p>
+              <p class="ga-stat-card__value" id="bscsStatus">100% ASSIGNED</p>
+            </div>
+          </div>
+          
+          <div class="ga-stat-card">
+            <div class="ga-stat-card__icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                <path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="ga-stat-card__content">
+              <p class="ga-stat-card__label">BSIT</p>
+              <p class="ga-stat-card__value" id="bsitStatus">100% ASSIGNED</p>
             </div>
           </div>
         </div>

@@ -16,6 +16,7 @@ from database import db
 from models import Course, FacultyAssignment, Room, Schedule, Section, Semester, User
 from routes.auth import current_user, login_required, role_required
 from notify import notify_timetables_distributed
+from scope import faculty_ids_in_scope, in_scope
 from room_allocator import (
     RoomAllocator, room_label, to_minutes, wanted_room_type,
 )
@@ -85,6 +86,10 @@ def get_faculty_loads():
     for faculty_id, units in schedule_loads.items():
         loads.setdefault(faculty_id, units)
 
+    allowed = faculty_ids_in_scope(current_user())   # None = unrestricted
+    if allowed is not None:
+        loads = {fid: u for fid, u in loads.items() if fid in allowed}
+
     return jsonify(loads), 200
 
 
@@ -119,6 +124,8 @@ def get_faculty_schedule(faculty_id: int):
     faculty = db.session.get(User, faculty_id)
     if not faculty:
         return jsonify({"error": "Faculty not found."}), 404
+    if not in_scope(current_user(), faculty):
+        return jsonify({"error": "Forbidden: this faculty belongs to another department."}), 403
 
     sem = _active_semester()
     if not sem:
@@ -179,6 +186,12 @@ def publish_schedule():
     body        = request.get_json(silent=True) or {}
     assignments = body.get("assignments") or []
 
+    # A department chairperson can only publish for (and replace the schedule
+    # of) faculty in their own department.
+    allowed = faculty_ids_in_scope(current_user())   # None = unrestricted
+    if allowed is not None:
+        assignments = [a for a in assignments if a.get("faculty_id") in allowed]
+
     if not assignments:
         return jsonify({"error": "No assignments provided."}), 400
 
@@ -188,8 +201,25 @@ def publish_schedule():
     courses_by_code = {c.course_code: c for c in Course.query.all()}
     allocator   = RoomAllocator(all_rooms)
 
-    # Wipe existing schedule for this semester
-    Schedule.query.filter_by(semester_id=sem.id).delete()
+    # Wipe the existing schedule for this semester (only the chairperson's own
+    # department when scoped; the other department's rows stay untouched).
+    wipe = Schedule.query.filter_by(semester_id=sem.id)
+    if allowed is not None:
+        wipe = wipe.filter(Schedule.faculty_id.in_(allowed))
+    wipe.delete(synchronize_session=False)
+
+    # Rooms are shared between departments: whatever the other department
+    # already has booked must not be handed out again.
+    if allowed is not None:
+        by_code = {r.room_code.strip().upper(): r for r in all_rooms}
+        for e in Schedule.query.filter_by(semester_id=sem.id).all():
+            label = (e.room or "").strip()
+            if not label or label.upper() == "TBA":
+                continue
+            booked = by_code.get(label.split(" ", 1)[0].strip().upper())
+            st, en = to_minutes(e.time_start), to_minutes(e.time_end)
+            if booked and st is not None and en is not None:
+                allocator.reserve(booked.id, [e.day], st, en)
 
     # ── Pass 1: normalise every assignment into (assignment, days) and lock in
     #    any room that was already chosen so it can't be double-booked.
@@ -266,7 +296,7 @@ def publish_schedule():
 
 
 # ── Backfill rooms for rows that were published without one ──
-def assign_missing_rooms(semester_id: int) -> int:
+def assign_missing_rooms(semester_id: int, faculty_ids: set[int] | None = None) -> int:
     """Give a conflict-free room to every published Schedule row that is still
     "TBA" (or blank).  Idempotent: rows that already have a room are left alone
     and their slots are treated as booked.  Returns the number of rows updated.
@@ -277,6 +307,8 @@ def assign_missing_rooms(semester_id: int) -> int:
     entries = Schedule.query.filter_by(semester_id=semester_id).all()
     missing = [e for e in entries if not (e.room or "").strip()
                or (e.room or "").strip().upper() == "TBA"]
+    if faculty_ids is not None:
+        missing = [e for e in missing if e.faculty_id in faculty_ids]
     if not missing:
         return 0
 
@@ -333,6 +365,6 @@ def assign_rooms():
     sem = _active_semester()
     if not sem:
         return jsonify({"error": "No active semester found."}), 400
-    updated = assign_missing_rooms(sem.id)
+    updated = assign_missing_rooms(sem.id, faculty_ids_in_scope(current_user()))
     return jsonify({"message": f"Assigned rooms to {updated} schedule entries.",
                     "updated": updated}), 200

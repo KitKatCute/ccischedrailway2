@@ -7,37 +7,22 @@
 }
 
 .back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: none;
-  color: var(--maroon);
-  font-family: 'Raleway', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: background 0.2s;
-  margin-bottom: 16px;
-}
-
-.back-btn:hover {
-  background: rgba(128, 0, 0, 0.08);
+  display: none;
 }
 
 .page-title {
   font-size: 1.80rem;
   font-weight: 900;
-  color: var(--maroon);
+  color: var(--black);
   margin: 0 0 8px 0;
 }
 
 .page-subtitle {
   font-size: 0.92rem;
-  color: rgba(128, 0, 0, 0.65);
+  color: #888888;
   margin: 0;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #E4E4E4;
 }
 
 /* ═══════════════════════════════════
@@ -76,6 +61,40 @@
   border-color: var(--maroon);
 }
 
+/* BSIT tab - Yellow */
+.dept-tab[data-dept="bsit"] {
+  border-color: rgba(234, 179, 8, 0.30);
+  color: #854D0E;
+}
+
+.dept-tab[data-dept="bsit"]:hover {
+  background: rgba(234, 179, 8, 0.08);
+  border-color: rgba(234, 179, 8, 0.50);
+}
+
+.dept-tab[data-dept="bsit"].dept-tab--active {
+  background: #EAB308;
+  color: var(--white);
+  border-color: #EAB308;
+}
+
+/* BSCS tab - Blue */
+.dept-tab[data-dept="bscs"] {
+  border-color: rgba(59, 130, 246, 0.30);
+  color: #1E40AF;
+}
+
+.dept-tab[data-dept="bscs"]:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.50);
+}
+
+.dept-tab[data-dept="bscs"].dept-tab--active {
+  background: #3B82F6;
+  color: var(--white);
+  border-color: #3B82F6;
+}
+
 /* ═══════════════════════════════════
    COMPLETION CARD
 ═══════════════════════════════════ */
@@ -100,16 +119,16 @@
 .progress-stat {
   text-align: center;
   padding: 16px;
-  background: linear-gradient(135deg, rgba(128, 0, 0, 0.03), rgba(128, 0, 0, 0.08));
+  background: var(--white);
   border-radius: 12px;
-  border: 1px solid rgba(128, 0, 0, 0.15);
+  border: 2px solid var(--maroon);
 }
 
 .progress-stat__label {
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: rgba(128, 0, 0, 0.65);
+  color: #888888;
   text-transform: uppercase;
   margin: 0 0 8px 0;
 }
@@ -117,7 +136,7 @@
 .progress-stat__value {
   font-size: 1.80rem;
   font-weight: 900;
-  color: var(--maroon);
+  color: var(--black);
   margin: 0;
 }
 
@@ -136,7 +155,7 @@
   justify-content: space-between;
   padding: 18px 22px;
   background: var(--white);
-  border: 2px solid rgba(128, 0, 0, 0.15);
+  border: 2px solid rgba(128, 0, 0, 0.18);
   border-radius: 12px;
   transition: all 0.2s ease;
 }
@@ -157,8 +176,8 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(128, 0, 0, 0.12), rgba(128, 0, 0, 0.20));
-  border: 2px solid rgba(128, 0, 0, 0.25);
+  background: var(--white);
+  border: 2px solid rgba(128, 0, 0, 0.20);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -180,14 +199,14 @@
 .faculty-name {
   font-size: 0.95rem;
   font-weight: 800;
-  color: var(--maroon);
+  color: var(--black);
   margin: 0;
 }
 
 .faculty-id {
   font-size: 0.75rem;
   font-weight: 600;
-  color: rgba(128, 0, 0, 0.50);
+  color: #888888;
   margin: 0;
 }
 
@@ -202,15 +221,15 @@
   flex-direction: column;
   align-items: center;
   padding: 10px 20px;
-  background: linear-gradient(135deg, rgba(128, 0, 0, 0.08), rgba(128, 0, 0, 0.12));
+  background: var(--white);
   border-radius: 10px;
-  border: 1px solid rgba(128, 0, 0, 0.20);
+  border: 2px solid rgba(128, 0, 0, 0.20);
 }
 
 .course-count__number {
   font-size: 1.40rem;
   font-weight: 900;
-  color: var(--maroon);
+  color: var(--black);
   line-height: 1;
   margin: 0;
 }
@@ -219,7 +238,7 @@
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: rgba(128, 0, 0, 0.60);
+  color: #888888;
   text-transform: uppercase;
   margin: 4px 0 0 0;
 }
@@ -317,7 +336,7 @@
 
 .course-details-eyebrow {
   margin: 0 0 5px;
-  color: rgba(128, 0, 0, 0.60);
+  color: #888888;
   font-size: 0.70rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -326,14 +345,14 @@
 
 .course-details-header h2 {
   margin: 0;
-  color: var(--maroon);
+  color: var(--black);
   font-size: 1.25rem;
   font-weight: 900;
 }
 
 .course-details-header > div > p:last-child {
   margin: 5px 0 0;
-  color: rgba(128, 0, 0, 0.50);
+  color: #888888;
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -376,21 +395,21 @@
 }
 
 .course-detail-code {
-  color: rgba(128, 0, 0, 0.55);
+  color: #888888;
   font-size: 0.68rem;
   font-weight: 800;
 }
 
 .course-detail-name {
   margin-top: 3px;
-  color: var(--maroon);
+  color: var(--black);
   font-size: 0.88rem;
   font-weight: 800;
 }
 
 .course-detail-sections {
   margin-top: 5px;
-  color: rgba(128, 0, 0, 0.55);
+  color: #888888;
   font-size: 0.72rem;
   font-weight: 600;
 }
@@ -398,7 +417,7 @@
 .course-detail-meta {
   min-width: 64px;
   text-align: center;
-  color: var(--maroon);
+  color: var(--black);
 }
 
 .course-detail-meta strong {
@@ -413,6 +432,7 @@
   font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
+  color: #888888;
 }
 
 .course-details-empty,

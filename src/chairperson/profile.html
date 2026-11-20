@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/faculty-dashboard.css" />
+  <link rel="stylesheet" href="../styles/chairperson-dashboard.css" />
   <link rel="stylesheet" href="../styles/faculty-profile.css" />
   <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg" />
 </head>
@@ -21,11 +22,13 @@
     <aside class="sidebar">
 
       <div class="sidebar__logo">
-        <img src="../assets/images/logo.svg" alt="CCISched logo" width="38" height="38" />
+        <img src="../assets/images/logo.svg" alt="CCISched logo" width="48" height="48" />
         <span class="sidebar__logo-text">CCISCHED</span>
       </div>
 
       <nav class="sidebar__nav">
+
+        <div class="sidebar__category">Navigation</div>
 
         <a href="dashboard.html" class="sidebar__link">
           <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
@@ -68,6 +71,16 @@
           <span>Schedule</span>
         </a>
 
+        <a href="notifications.html" class="sidebar__link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Notifications</span>
+        </a>
+
+        <div class="sidebar__category">System</div>
+
         <a href="audit-log.html" class="sidebar__link">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path d="M12 3L4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
@@ -76,39 +89,47 @@
           <span>Audit Log</span>
         </a>
 
+        <a href="profile.html" class="sidebar__link sidebar__link--active">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <span>Edit Profile</span>
+        </a>
+
       </nav>
 
       <!-- Sidebar illustration -->
       <div class="sidebar__illustration" aria-hidden="true">
         <svg width="140" height="180" viewBox="0 0 140 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="70" cy="100" r="58" stroke="white" stroke-width="1.2" opacity="0.10"/>
-          <circle cx="70" cy="100" r="42" stroke="white" stroke-width="1" opacity="0.10"/>
-          <rect x="30" y="62" width="80" height="72" rx="10" fill="white" opacity="0.08"/>
-          <rect x="30" y="62" width="80" height="72" rx="10" stroke="white" stroke-width="1.2" opacity="0.18"/>
-          <rect x="30" y="62" width="80" height="18" rx="10" fill="white" opacity="0.10"/>
-          <rect x="30" y="72" width="80" height="8" fill="white" opacity="0.10"/>
-          <rect x="48" y="56" width="6" height="12" rx="3" fill="white" opacity="0.30"/>
-          <rect x="86" y="56" width="6" height="12" rx="3" fill="white" opacity="0.30"/>
-          <circle cx="47" cy="97" r="3.5" fill="white" opacity="0.60"/>
-          <circle cx="61" cy="97" r="3.5" fill="white" opacity="0.60"/>
-          <circle cx="75" cy="97" r="3.5" fill="white" opacity="0.25"/>
-          <circle cx="89" cy="97" r="3.5" fill="white" opacity="0.25"/>
-          <circle cx="47" cy="112" r="3.5" fill="white" opacity="0.25"/>
-          <circle cx="61" cy="112" r="3.5" fill="white" opacity="0.60"/>
-          <circle cx="75" cy="112" r="3.5" fill="white" opacity="0.60"/>
-          <circle cx="89" cy="112" r="3.5" fill="white" opacity="0.25"/>
-          <line x1="47" y1="97" x2="61" y2="97" stroke="white" stroke-width="1" opacity="0.20"/>
-          <line x1="61" y1="97" x2="61" y2="112" stroke="white" stroke-width="1" opacity="0.20"/>
-          <line x1="61" y1="112" x2="75" y2="112" stroke="white" stroke-width="1" opacity="0.20"/>
-          <rect x="88" y="38" width="36" height="22" rx="6" fill="white" opacity="0.08"/>
-          <circle cx="98" cy="49" r="4" fill="white" opacity="0.20"/>
-          <rect x="106" y="44" width="12" height="3" rx="1.5" fill="white" opacity="0.20"/>
-          <rect x="106" y="50" width="8" height="3" rx="1.5" fill="white" opacity="0.15"/>
-          <rect x="16" y="128" width="34" height="22" rx="6" fill="white" opacity="0.08"/>
-          <rect x="24" y="135" width="18" height="3" rx="1.5" fill="white" opacity="0.20"/>
-          <rect x="24" y="141" width="12" height="3" rx="1.5" fill="white" opacity="0.15"/>
-          <circle cx="18" cy="72" r="2.5" fill="white" opacity="0.15"/>
-          <circle cx="122" cy="130" r="2.5" fill="white" opacity="0.15"/>
+          <circle cx="70" cy="100" r="58" stroke="white" stroke-width="1.2" opacity="0.20"/>
+          <circle cx="70" cy="100" r="42" stroke="white" stroke-width="1" opacity="0.20"/>
+          <rect x="30" y="62" width="80" height="72" rx="10" fill="white" opacity="0.15"/>
+          <rect x="30" y="62" width="80" height="72" rx="10" stroke="white" stroke-width="1.2" opacity="0.35"/>
+          <rect x="30" y="62" width="80" height="18" rx="10" fill="#FFB81C" opacity="0.25"/>
+          <rect x="30" y="72" width="80" height="8" fill="white" opacity="0.20"/>
+          <rect x="48" y="56" width="6" height="12" rx="3" fill="#FFB81C" opacity="0.60"/>
+          <rect x="86" y="56" width="6" height="12" rx="3" fill="#FFB81C" opacity="0.60"/>
+          <circle cx="47" cy="97" r="3.5" fill="#FFB81C" opacity="0.80"/>
+          <circle cx="61" cy="97" r="3.5" fill="#FFB81C" opacity="0.80"/>
+          <circle cx="75" cy="97" r="3.5" fill="white" opacity="0.40"/>
+          <circle cx="89" cy="97" r="3.5" fill="white" opacity="0.40"/>
+          <circle cx="47" cy="112" r="3.5" fill="white" opacity="0.40"/>
+          <circle cx="61" cy="112" r="3.5" fill="#FFB81C" opacity="0.80"/>
+          <circle cx="75" cy="112" r="3.5" fill="#FFB81C" opacity="0.80"/>
+          <circle cx="89" cy="112" r="3.5" fill="white" opacity="0.40"/>
+          <line x1="47" y1="97" x2="61" y2="97" stroke="#FFB81C" stroke-width="1" opacity="0.40"/>
+          <line x1="61" y1="97" x2="61" y2="112" stroke="#FFB81C" stroke-width="1" opacity="0.40"/>
+          <line x1="61" y1="112" x2="75" y2="112" stroke="#FFB81C" stroke-width="1" opacity="0.40"/>
+          <rect x="88" y="38" width="36" height="22" rx="6" fill="white" opacity="0.12" stroke="white" stroke-width="1" opacity="0.25"/>
+          <circle cx="98" cy="49" r="4" fill="#FFB81C" opacity="0.45"/>
+          <rect x="106" y="44" width="12" height="3" rx="1.5" fill="white" opacity="0.35"/>
+          <rect x="106" y="50" width="8" height="3" rx="1.5" fill="white" opacity="0.25"/>
+          <rect x="16" y="128" width="34" height="22" rx="6" fill="white" opacity="0.12" stroke="white" stroke-width="1" opacity="0.25"/>
+          <rect x="24" y="135" width="18" height="3" rx="1.5" fill="white" opacity="0.35"/>
+          <rect x="24" y="141" width="12" height="3" rx="1.5" fill="white" opacity="0.25"/>
+          <circle cx="18" cy="72" r="2.5" fill="#FFB81C" opacity="0.35"/>
+          <circle cx="122" cy="130" r="2.5" fill="#FFB81C" opacity="0.35"/>
         </svg>
       </div>
 
@@ -154,22 +175,24 @@
 
         <!-- Page title -->
         <div class="profile-page-title">
-          <h1 class="profile-page-title__text">Edit Profile <span>| Chairperson</span></h1>
+          <h1 class="profile-page-title__text">Edit Profile</h1>
         </div>
 
         <!-- Two-column layout: left panel + right form -->
         <div class="profile-layout">
 
-          <!-- LEFT: Avatar + tab nav -->
-          <div class="profile-left">
+          <!-- LEFT: Avatar + tab nav (dashboard style card) -->
+          <aside class="cp-profile">
 
-            <div class="profile-left__avatar-wrap">
-              <img src="../assets/images/avatar-male.svg" alt="Avatar" class="profile-left__avatar" />
+            <div class="cp-profile__avatar-wrap">
+              <img src="../assets/images/star.png" alt="Chairperson avatar" class="cp-profile__avatar-img" />
             </div>
+            <p class="cp-profile__name">Loading…</p>
+            <p class="cp-profile__role">Chairperson</p>
 
-            <p class="profile-left__name">Loading…</p>
-            <p class="profile-left__role">Chairperson</p>
+            <div class="cp-profile__divider"></div>
 
+            <!-- Tab Navigation -->
             <nav class="profile-tabs">
               <button class="profile-tab profile-tab--active" data-tab="personal">
                 <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
@@ -195,7 +218,7 @@
               </button>
             </nav>
 
-          </div>
+          </aside>
 
           <!-- RIGHT: Form panels -->
           <div class="profile-right">

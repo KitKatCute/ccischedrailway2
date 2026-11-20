@@ -115,6 +115,8 @@ def change_password():
         return jsonify({"error": "New password must be at least 6 characters."}), 400
 
     user.password_hash = generate_password_hash(new_pw)
+    user.temp_password_hash    = None      # any emailed temporary password is now void
+    user.temp_password_expires = None
     db.session.commit()
 
     return jsonify({"message": "Password changed successfully."}), 200

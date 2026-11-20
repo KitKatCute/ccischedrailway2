@@ -5,7 +5,7 @@
 // non-chairpersons away from /chairperson/ pages).
 
 const $ = (id) => document.getElementById(id);
-const state = { page: 1, pages: 1, perPage: 25 };
+const state = { page: 1, pages: 1, perPage: 12 };
 
 const topbarDate = $('topbarDate');
 if (topbarDate) {
@@ -67,7 +67,7 @@ function render(data) {
         </td>
         <td>${detailsHtml(l)}</td>
         <td><span class="audit-pill ${l.success ? 'audit-pill--ok' : 'audit-pill--fail'}">
-          ${l.success ? 'Success' : 'Failed'}${l.status_code ? ' · ' + l.status_code : ''}</span></td>
+          ${l.success ? 'Success' : 'Failed'}</span></td>
       </tr>`).join('');
   }
   state.page  = data.page;

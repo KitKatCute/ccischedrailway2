@@ -81,13 +81,141 @@
 }
 
 /* ═══════════════════════════════════
+   STAT CARDS ROW
+═══════════════════════════════════ */
+.ga-stat-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.ga-stat-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 22px 26px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  border: 1.5px solid rgba(128, 0, 0, 0.12);
+  border-top: 4px solid var(--maroon);
+  transition: box-shadow 0.2s, transform 0.2s;
+  min-height: 130px;
+}
+
+.ga-stat-card:hover {
+  box-shadow: 0 4px 18px rgba(128, 0, 0, 0.14);
+  transform: translateY(-2px);
+}
+
+/* BSCS - Blue theme */
+.ga-stat-card:nth-child(1) {
+  border-color: rgba(37, 99, 235, 0.12);
+  border-top-color: #2563EB;
+}
+
+.ga-stat-card:nth-child(1):hover {
+  box-shadow: 0 4px 18px rgba(37, 99, 235, 0.14);
+}
+
+.ga-stat-card:nth-child(1) .ga-stat-card__icon {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.10), rgba(37, 99, 235, 0.15));
+}
+
+.ga-stat-card:nth-child(1) .ga-stat-card__icon svg {
+  color: #2563EB;
+  stroke: #2563EB;
+}
+
+.ga-stat-card:nth-child(1) .ga-stat-card__label {
+  color: #2563EB;
+}
+
+/* BSIT - Yellow/Gold theme */
+.ga-stat-card:nth-child(2) {
+  border-color: rgba(234, 179, 8, 0.12);
+  border-top-color: #EAB308;
+}
+
+.ga-stat-card:nth-child(2):hover {
+  box-shadow: 0 4px 18px rgba(234, 179, 8, 0.14);
+}
+
+.ga-stat-card:nth-child(2) .ga-stat-card__icon {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.10), rgba(234, 179, 8, 0.15));
+}
+
+.ga-stat-card:nth-child(2) .ga-stat-card__icon svg {
+  color: #EAB308;
+  stroke: #EAB308;
+}
+
+.ga-stat-card:nth-child(2) .ga-stat-card__label {
+  color: #EAB308;
+}
+
+.ga-stat-card__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(128, 0, 0, 0.10), rgba(128, 0, 0, 0.15));
+}
+
+.ga-stat-card__icon svg {
+  color: var(--maroon);
+  stroke: var(--maroon);
+}
+
+.ga-stat-card__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ga-stat-card__label {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--maroon);
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  margin-bottom: 2px;
+}
+
+.ga-stat-card__value {
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: var(--black);
+  line-height: 1;
+}
+
+/* For text-based values (like "100% ASSIGNED") */
+.ga-stat-card__value:not([id*="sections"]):not([id*="availability"]) {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.ga-stat-card__sub {
+  font-size: 0.72rem;
+  color: #888888;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ═══════════════════════════════════
    REVIEW / ADJUST CARD
 ═══════════════════════════════════ */
 .ga-review-card {
   background: var(--white);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-sm);
-  border: 2px solid rgba(128, 0, 0, 0.18);
+  border: 2px solid rgba(128, 0, 0, 0.12);
+  border-left: 4px solid var(--maroon);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -95,7 +223,7 @@
 
 /* ── Sticky thead ── */
 .ga-review-card__thead {
-  background: var(--maroon);
+  background: var(--white);
   position: sticky;
   top: 0;
   z-index: 4;
@@ -107,22 +235,22 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 14px 24px;
+  border-bottom: none;
   flex-wrap: wrap;
 }
 
 .ga-thead-title__text {
-  font-size: 0.70rem;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  color: var(--white);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  color: var(--black);
 }
 
 .ga-thead-title__sub {
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.55);
+  color: #666666;
   white-space: nowrap;
 }
 
@@ -130,15 +258,17 @@
 .ga-col-headers {
   display: grid;
   grid-template-columns: 2.5fr 1fr 1fr 1fr;
-  padding: 10px 24px;
+  padding: 12px 24px;
   gap: 12px;
+  background: var(--white);
+  border-top: 2px solid #D1D5DB;
 }
 
 .ga-col {
-  font-size: 0.60rem;
+  font-size: 0.68rem;
   font-weight: 900;
-  letter-spacing: 0.10em;
-  color: rgba(255, 255, 255, 0.80);
+  letter-spacing: 0.08em;
+  color: var(--black);
   text-transform: uppercase;
 }
 
@@ -183,7 +313,7 @@
   color: var(--black);
 }
 
-.ga-row__status { color: var(--maroon); }
+.ga-row__status { color: #16A34A; }
 
 .ga-row__actions {
   display: flex;
@@ -238,11 +368,11 @@
   cursor: pointer;
   transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s;
   border: 2px solid transparent;
+  background: var(--white);
 }
 
 .ga-action-btn--discard {
-  background: var(--white);
-  border-color: rgba(128, 0, 0, 0.35);
+  border-color: var(--maroon);
   color: var(--maroon);
 }
 
@@ -251,16 +381,32 @@
 }
 
 .ga-action-btn--approve {
-  background: var(--white);
-  border-color: rgba(128, 0, 0, 0.35);
-  color: var(--maroon);
+  border-color: #16A34A;
+  color: #16A34A;
 }
 
 .ga-action-btn--approve:hover {
-  background: var(--maroon);
-  color: var(--white);
-  border-color: var(--maroon);
-  box-shadow: 0 4px 14px rgba(128, 0, 0, 0.28);
+  background: #F0FDF4;
+}
+
+/* Export and Print PDF buttons - Yellow */
+#exportPdfBtn {
+  border-color: #EAB308;
+  color: #EAB308;
+}
+
+#exportPdfBtn:hover {
+  background: #FEF9C3;
+}
+
+/* Print PDF button - Blue */
+#printPdfBtn {
+  border-color: #2563EB;
+  color: #2563EB;
+}
+
+#printPdfBtn:hover {
+  background: #EFF6FF;
 }
 
 /* ── Toast ── */
@@ -298,5 +444,9 @@
 
   .ga-overview-card__body {
     justify-content: center;
+  }
+
+  .ga-stat-cards {
+    grid-template-columns: 1fr;
   }
 }

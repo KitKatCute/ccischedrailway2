@@ -8,6 +8,7 @@
 /* ── Page title ── */
 .af-page-title {
   margin-bottom: 20px;
+  margin-top: 30px;
 }
 
 .af-page-title__text {
@@ -15,13 +16,15 @@
   font-weight: 900;
   color: var(--black);
   letter-spacing: -0.01em;
-  margin-bottom: 2px;
+  margin-bottom: 10px;
 }
 
 .af-page-title__sub {
   font-size: 0.78rem;
   font-weight: 500;
   color: var(--text-muted);
+  padding-bottom: 16px;
+  border-bottom: 2px solid #E4E4E4;
 }
 
 /* ── Breadcrumb ── */
@@ -60,42 +63,43 @@
   max-width: 100%;
 }
 
-/* Card header — maroon band */
+/* Card header — light maroon with yellow border */
 .af-card__header {
-  background: var(--maroon);
+  background: #FFF0F0;
   padding: 18px 26px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-bottom: 3px solid #FFB81C;
 }
 
 .af-card__title {
   font-size: 0.82rem;
   font-weight: 900;
   letter-spacing: 0.14em;
-  color: var(--white);
+  color: var(--maroon);
 }
 
 .af-card__slot-badge {
   font-size: 0.70rem;
   font-weight: 800;
   letter-spacing: 0.10em;
-  color: var(--maroon);
-  background: var(--white);
+  color: var(--white);
+  background: var(--maroon);
   padding: 4px 14px;
   border-radius: var(--radius-pill);
 }
 
-/* Toolbar — maroon band */
+/* Toolbar — white background */
 .af-card__toolbar {
-  background: var(--maroon-dk);
+  background: var(--white);
   padding: 12px 26px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
   flex-wrap: wrap;
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid #E4E4E4;
 }
 
 .af-hint {
@@ -104,8 +108,8 @@
   gap: 8px;
   font-size: 0.76rem;
   font-weight: 600;
-  color: var(--white);
-  background: rgba(255,255,255,0.12);
+  color: #111111;
+  background: #FFF0F0;
   padding: 8px 16px;
   border-radius: var(--radius-pill);
 }
@@ -152,26 +156,27 @@
   color: var(--white);
 }
 
-/* Info bar — maroon band */
+/* Info bar — white background */
 .af-card__info {
-  background: var(--maroon-dk);
+  background: var(--white);
   padding: 12px 26px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid #E4E4E4;
+  border-bottom: 2px solid #E4E4E4;
 }
 
 .af-info__row {
   font-size: 0.76rem;
   font-weight: 500;
-  color: rgba(255,255,255,0.72);
+  color: #666666;
   line-height: 1.9;
 }
 
 .af-info__row strong {
-  color: var(--white);
+  color: #111111;
   font-weight: 800;
 }
 
@@ -181,18 +186,24 @@
   gap: 7px;
   padding: 8px 18px;
   border-radius: var(--radius-pill);
-  border: 1.5px solid rgba(255,255,255,0.35);
-  background: var(--white);
+  border: none;
+  background: var(--maroon);
   font-family: 'Raleway', sans-serif;
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--maroon);
+  color: var(--white);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, box-shadow 0.15s;
 }
 
 .af-history-btn:hover {
-  background: var(--maroon-lt);
+  background: var(--maroon-dk);
+  box-shadow: 0 2px 8px rgba(128, 0, 0, 0.25);
+}
+
+.af-history-btn svg {
+  color: var(--white);
+}
 }
 
 /* ── Table ── */
@@ -213,7 +224,7 @@
   font-size: 0.70rem;
   font-weight: 900;
   letter-spacing: 0.08em;
-  color: var(--maroon);
+  color: #111111;
   text-align: center;
   border-bottom: 2px solid var(--border);
   white-space: nowrap;
@@ -249,7 +260,7 @@
 .af-table td:first-child {
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--maroon);
+  color: #111111;
   text-align: left;
   padding-left: 26px;
   white-space: nowrap;
@@ -321,10 +332,7 @@
 
 /* Slim topbar variant — no search bar, just breadcrumb + right actions */
 .topbar--slim {
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  background: var(--white);
-  padding: 14px 28px;
+  display: none;
 }
 
 /* ─────────────────────────────────────────────
@@ -530,6 +538,67 @@
   color: var(--text-muted);
   white-space: nowrap;
 }
+
+/* "This semester" tag next to the semester name */
+.hist-tag {
+  align-self: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--maroon);
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Action row at the bottom of each history entry (Load into form / Resubmit) */
+.hist-entry__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 16px 12px;
+  border-top: 1px solid rgba(128,0,0,0.06);
+}
+
+.hist-btn {
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1.5px solid var(--maroon);
+  transition: background 0.12s, color 0.12s, opacity 0.12s;
+}
+.hist-btn--outline { background: #fff; color: var(--maroon); }
+.hist-btn--outline:hover:not(:disabled) { background: rgba(128,0,0,0.06); }
+.hist-btn--solid { background: var(--maroon); color: #fff; }
+.hist-btn--solid:hover:not(:disabled) { opacity: 0.88; }
+.hist-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Notes / loading / empty / error states inside the modal body */
+.hist-note {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.hist-note--warn {
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: #FFF7E6;
+  color: #7a5300;
+}
+.hist-state {
+  margin: 0;
+  padding: 28px 12px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.hist-state--error { color: #b00020; }
 
 /* ── Finalized banner (shown at top of card when locked) ── */
 .af-finalized-banner {

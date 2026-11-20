@@ -104,12 +104,11 @@ function render() {
     const assigned = (member.courses || []).length;
     const item = document.createElement('div');
     item.className = 'faculty-item';
-    const gender = member.gender === 'male' ? 'male' : 'female';
 
     item.innerHTML = `
       <div class="faculty-info">
         <div class="faculty-avatar">
-          <img src="../assets/images/avatar-${gender}.svg" alt="${escapeHtml(member.name)}" />
+          <img src="../assets/images/star.png" alt="${escapeHtml(member.name)}" />
         </div>
         <div class="faculty-details">
           <p class="faculty-name">${escapeHtml(member.name)}</p>

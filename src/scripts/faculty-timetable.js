@@ -168,8 +168,8 @@ if (tbody) {
 document.getElementById('exportIndividualBtn')?.addEventListener('click', () => {
   const schedCardHTML = document.querySelector('.ft-card').outerHTML;
 
-  const pupLogoURL = new URL('../assets/images/pup-seal.png', window.location.href).href;
-  const cciLogoURL = new URL('../assets/images/cci-seal.png', window.location.href).href;
+  const headerURL = new URL('../assets/images/letterhead-header.png', window.location.href).href;
+  const footerURL = new URL('../assets/images/letterhead-footer.png', window.location.href).href;
 
   const displayFaculty = facultyName;
   const displaySemester = `${semParam}, A.Y. ${ayParam}`;
@@ -251,6 +251,17 @@ document.getElementById('exportIndividualBtn')?.addEventListener('click', () => 
       text-align: center; font-family: 'Raleway', sans-serif;
     }
 
+    /* ── Official letterhead (header image + footer image) ── */
+    .lh-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 8px; border-bottom: 2px solid #000; }
+    .lh-header { height: 72px; width: auto; min-width: 0; flex: 0 1 auto; object-fit: contain; object-position: left center; display: block; }
+    .lh-faculty { justify-self: end; width: 190px; min-height: 44px; border: 2px solid #000; display: flex; align-items: center; justify-content: center; padding: 6px 12px; }
+    .lh-faculty span { font-size: 16px; font-weight: 700; color: #000; text-align: center; font-family: 'Raleway', sans-serif; }
+    .lh-title-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin: 8px 0 12px; }
+    .lh-title-block { text-align: center; }
+    .lh-title { font-size: 13px; font-weight: 700; letter-spacing: 0.05em; margin: 0; color: #000; font-family: 'Raleway', sans-serif; }
+    .lh-sem { font-size: 12px; font-weight: 700; margin: 0; color: #000; font-family: 'Raleway', sans-serif; }
+    .lh-footer { height: 60px; width: auto; min-width: 0; flex: 0 1 auto; object-fit: contain; object-position: right center; display: block; }
+
     /* ── Table card ── */
     .ft-card { box-shadow: none; border: 1px solid #ccc; overflow: hidden; border-radius: 8px; }
     .ft-table-wrap { overflow-x: auto; width: 100%; }
@@ -275,11 +286,11 @@ document.getElementById('exportIndividualBtn')?.addEventListener('click', () => 
       padding: 0 8px 0 16px; font-size: 0.80rem; font-weight: 800;
       color: #111; text-align: left; white-space: nowrap;
       background: #fff; border-right: 2px solid #aaa;
-      height: 80px; vertical-align: middle;
+      height: 64px; vertical-align: middle;
     }
     .ft-table td.td-slot {
       padding: 6px 4px; text-align: center; vertical-align: middle;
-      height: 80px; border-right: 1px solid #ccc;
+      height: 64px; border-right: 1px solid #ccc;
       background-image:
         linear-gradient(rgba(0,0,0,0.18) 50%, transparent 50%),
         linear-gradient(rgba(0,0,0,0.18) 50%, transparent 50%);
@@ -305,27 +316,19 @@ document.getElementById('exportIndividualBtn')?.addEventListener('click', () => 
 </head>
 <body>
 
-  <div class="print-header">
-    <div class="print-header__row1">
-      <div class="print-header__logos">
-        <img src="${pupLogoURL}" alt="PUP Seal" class="print-header__logo">
-        <img src="${cciLogoURL}" alt="CCI Seal" class="print-header__logo">
-      </div>
-      <div class="print-header__text">
-        <p class="print-header__university">POLYTECHNIC UNIVERSITY OF THE PHILIPPINES</p>
-        <p class="print-header__office">Office of the Vice President for Academic Affairs</p>
-        <p class="print-header__college">COLLEGE OF COMPUTER AND INFORMATION SCIENCES</p>
-      </div>
-      <div class="print-header__faculty-box">
-        <span>${displayFaculty}</span>
-      </div>
-    </div>
-    <div class="print-header__row2">
-      <p class="print-header__title">TEACHING ASSIGNMENT</p>
-      <p class="print-header__semester">${displaySemester}</p>
-    </div>
+  <div class="lh-top">
+    <img class="lh-header" src="${headerURL}" alt="Polytechnic University of the Philippines - College of Computer and Information Sciences">
+    <img class="lh-footer" src="${footerURL}" alt="">
   </div>
-
+  <div class="lh-title-row">
+    <span></span>
+    <div class="lh-title-block">
+      <p class="lh-title">TEACHING ASSIGNMENT</p>
+      <p class="lh-sem">${displaySemester}</p>
+    </div>
+    <div class="lh-faculty"><span>${displayFaculty}</span></div>
+  </div>
+  
   ${schedCardHTML}
 
   <script>

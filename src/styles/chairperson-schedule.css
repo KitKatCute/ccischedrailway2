@@ -10,33 +10,44 @@
   background: var(--white);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-sm);
-  border: 2px solid rgba(128, 0, 0, 0.20);
   overflow: hidden;
 }
 
-/* Standard maroon header */
-.cs-card__header {
-  background: var(--maroon);
-  padding: 16px 24px;
+/* Left border only for cards with dark header (PRE-TIMETABLING REQUIREMENTS) */
+.cs-card:has(.cs-card__header--dark) {
+  border-left: 4px solid #800000;
 }
 
-/* Darker header variant (pre-timetabling) */
+/* Standard light pink header with yellow bottom border (for TIMETABLE GENERATION) */
+.cs-card__header {
+  background: #F5E6E6;
+  padding: 16px 24px;
+  border-bottom: 3px solid #FFB81C;
+}
+
+/* Darker header variant (pre-timetabling) - white background with bottom border */
 .cs-card__header--dark {
-  background: var(--maroon-dk);
-  padding: 16px 24px 14px;
+  background: var(--white);
+  padding: 16px 24px 16px;
+  border-bottom: 2px solid #E4E4E4;
 }
 
 .cs-card__title {
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.16em;
-  color: var(--white);
+  color: var(--maroon);
+}
+
+/* Use black text for dark header variant */
+.cs-card__header--dark .cs-card__title {
+  color: var(--black);
 }
 
 .cs-card__sub {
   font-size: 0.70rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.65);
+  color: #888888;
   margin-top: 5px;
   line-height: 1.4;
 }
@@ -80,7 +91,7 @@
   font-family: 'Raleway', sans-serif;
   font-size: 0.78rem;
   font-weight: 800;
-  color: var(--maroon);
+  color: var(--black);
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
@@ -102,7 +113,7 @@
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
   padding: 10px 24px;
-  background: rgba(128, 0, 0, 0.06);
+  background: var(--white);
   border-bottom: 1px solid rgba(128, 0, 0, 0.10);
   gap: 12px;
 }
@@ -111,7 +122,7 @@
   font-size: 0.60rem;
   font-weight: 900;
   letter-spacing: 0.10em;
-  color: var(--maroon);
+  color: var(--black);
   text-transform: uppercase;
 }
 
@@ -152,11 +163,11 @@
 }
 
 .cs-status-badge--complete {
-  color: var(--maroon);
+  color: #4DA872;
 }
 
 .cs-status-badge--pending {
-  color: #B45309;
+  color: #FFB81C;
 }
 
 .cs-status-badge--missing {
@@ -199,24 +210,26 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--maroon);
+  background: var(--white);
+  border: 3px solid #FFB81C;
   border-radius: var(--radius-card);
   padding: 16px 24px;
   box-shadow: var(--shadow-sm);
 }
 
-.cs-status-banner svg { flex-shrink: 0; color: rgba(255, 255, 255, 0.80); }
+.cs-status-banner svg { flex-shrink: 0; color: #FFB81C; }
 
 .cs-status-banner span {
   font-size: 0.76rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.90);
+  color: var(--black);
   line-height: 1.4;
 }
 
 /* Warning state */
 .cs-status-banner--warn {
-  background: #92400E;
+  background: var(--white);
+  border: 3px solid #FFB81C;
 }
 
 /* ═══════════════════════════════════

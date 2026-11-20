@@ -76,9 +76,15 @@ function renderCourses() {
       (activeFilter === 'complete' && isComplete) ||
       (activeFilter === 'partial'  && !isComplete);
 
+    // Enhanced search - check course name, code, section labels, and faculty names
+    const query = searchQuery.toLowerCase();
     const matchSearch =
-      course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.code.toLowerCase().includes(searchQuery.toLowerCase());
+      course.name.toLowerCase().includes(query) ||
+      course.code.toLowerCase().includes(query) ||
+      course.sections.some(s => 
+        s.label.toLowerCase().includes(query) ||
+        (s.assignedTo && s.assignedTo.toLowerCase().includes(query))
+      );
 
     return matchFilter && matchSearch;
   });
@@ -103,10 +109,10 @@ function renderCourses() {
       return `
         <div class="scd-section-tile scd-section-tile--${status}">
           <div class="scd-section-info">
-            <p class="scd-section-name">${sec.label}</p>
+            <p class="scd-section-name" style="color: black;">${sec.label}</p>
             ${sec.assignedTo
-              ? `<p class="scd-section-faculty">${sec.assignedTo}</p>`
-              : `<p class="scd-section-faculty" style="color:rgba(192,57,43,0.55);">Unassigned</p>`}
+              ? `<p class="scd-section-faculty" style="color: gray;">${sec.assignedTo}</p>`
+              : `<p class="scd-section-faculty" style="color: gray;">Unassigned</p>`}
           </div>
           <span class="scd-section-status"></span>
         </div>
@@ -116,8 +122,8 @@ function renderCourses() {
     card.innerHTML = `
       <div class="scd-course-header">
         <div class="scd-course-meta">
-          <p class="scd-course-name">${course.name}</p>
-          <p class="scd-course-code">${course.code}</p>
+          <p class="scd-course-name" style="color: black;">${course.name}</p>
+          <p class="scd-course-code" style="color: gray;">${course.code}</p>
         </div>
         <div class="scd-course-right">
           <div class="scd-mini-progress">
@@ -165,6 +171,11 @@ document.querySelectorAll('.scd-tab').forEach(tab => {
 //  SEARCH
 // ─────────────────────────────────────────────
 document.getElementById('searchInput')?.addEventListener('input', e => {
+  searchQuery = e.target.value;
+  renderCourses();
+});
+
+document.getElementById('searchCourseInput')?.addEventListener('input', e => {
   searchQuery = e.target.value;
   renderCourses();
 });

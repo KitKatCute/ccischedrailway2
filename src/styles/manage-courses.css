@@ -27,11 +27,72 @@
 }
 
 /* ═══════════════════════════════════
+   PAGE HEADER
+═══════════════════════════════════ */
+.mc-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.mc-page-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--maroon);
+  text-transform: uppercase;
+  margin: 0 0 6px 0;
+}
+
+.mc-page-title {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #000000;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.mc-page-description {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.mc-btn--add-header {
+  background: var(--maroon);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.80rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.mc-btn--add-header:hover {
+  background: #660000;
+  box-shadow: 0 4px 12px rgba(128, 0, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════
    MAIN CARD
 ═══════════════════════════════════ */
 .mc-card {
   background: var(--white);
-  border-radius: var(--radius-card);
+  border-radius: 0;
   box-shadow: var(--shadow-md);
   border: 2px solid rgba(128, 0, 0, 0.20);
   overflow: hidden;
@@ -40,20 +101,43 @@
 }
 
 /* ═══════════════════════════════════
+   SEARCH BAR
+═══════════════════════════════════ */
+.mc-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(128, 0, 0, 0.12);
+  background: #FAFAFA;
+}
+
+.mc-search-input {
+  flex: 1;
+  border: 1px solid rgba(128, 0, 0, 0.20);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.80rem;
+  font-weight: 600;
+  color: var(--black);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.mc-search-input::placeholder {
+  color: #AAAAAA;
+}
+
+.mc-search-input:focus {
+  border-color: var(--maroon);
+}
+
+/* ═══════════════════════════════════
    TABLE
 ═══════════════════════════════════ */
 .mc-table-wrap {
-  overflow-y: auto;
-  max-height: 520px;
   overflow-x: auto;
-}
-
-/* Scrollbar */
-.mc-table-wrap::-webkit-scrollbar { width: 5px; }
-.mc-table-wrap::-webkit-scrollbar-track { background: transparent; }
-.mc-table-wrap::-webkit-scrollbar-thumb {
-  background: rgba(128, 0, 0, 0.22);
-  border-radius: 4px;
 }
 
 .mc-table {
@@ -62,37 +146,18 @@
   font-family: 'Raleway', sans-serif;
 }
 
-/* ── Title row (sticky, top: 0) ── */
-.mc-thead-title th.mc-th-title {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  background: var(--maroon);
-  padding: 18px 20px;
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.16em;
-  color: var(--white);
-  text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-/* ── Column header row (sticky, just below title row) ── */
+/* ── Column header row ── */
 .mc-th {
-  position: sticky;
-  /* pushed down by the title row height: padding-top(18) + font + padding-bottom(18) ≈ 55px */
-  top: 55px;
-  z-index: 2;
-  background: var(--maroon);
-  padding: 11px 16px;
+  background: rgba(128, 0, 0, 0.08);
+  padding: 16px 16px;
   font-size: 0.60rem;
   font-weight: 900;
   letter-spacing: 0.10em;
-  color: var(--white);
+  color: var(--maroon);
   text-align: left;
   white-space: nowrap;
-  border-right: 1px solid rgba(255, 255, 255, 0.10);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+  border-right: 1px solid rgba(128, 0, 0, 0.08);
+  border-bottom: 3px solid #FFB81C;
 }
 
 .mc-th:last-child { border-right: none; }
@@ -174,6 +239,22 @@
   background: var(--maroon);
   color: var(--white);
   border-color: var(--maroon);
+}
+
+.mc-action-btn--edit {
+  color: #FFB81C;
+  border-color: rgba(255, 184, 28, 0.35);
+}
+
+.mc-action-btn--edit:hover {
+  background: #FFB81C;
+  color: var(--white);
+  border-color: #FFB81C;
+}
+
+.mc-action-btn--delete {
+  color: #6B7280;
+  border-color: rgba(107, 114, 128, 0.35);
 }
 
 .mc-action-btn--delete:hover {
@@ -464,4 +545,90 @@
 /* ── Responsive ── */
 @media (max-width: 760px) {
   .mc-modal__row { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════
+   PAGINATION
+═══════════════════════════════════ */
+.mc-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(128, 0, 0, 0.12);
+  background: #FAFAFA;
+}
+
+.mc-pagination__info {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.mc-pagination__info span {
+  font-weight: 800;
+  color: var(--maroon);
+}
+
+.mc-pagination__controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mc-pagination__btn {
+  padding: 8px 16px;
+  border: 1px solid rgba(128, 0, 0, 0.25);
+  border-radius: 6px;
+  background: var(--white);
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--maroon);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mc-pagination__btn:hover:not(:disabled) {
+  background: var(--maroon);
+  color: var(--white);
+  border-color: var(--maroon);
+}
+
+.mc-pagination__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mc-pagination__numbers {
+  display: flex;
+  gap: 4px;
+}
+
+.mc-pagination__number {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(128, 0, 0, 0.25);
+  border-radius: 6px;
+  background: var(--white);
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--maroon);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mc-pagination__number:hover {
+  background: var(--maroon-lt);
+  border-color: var(--maroon);
+}
+
+.mc-pagination__number--active {
+  background: var(--maroon);
+  color: var(--white);
+  border-color: var(--maroon);
 }

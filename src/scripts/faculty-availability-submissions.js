@@ -30,6 +30,8 @@ document.getElementById('notifBtn')?.addEventListener('click', () => {
 let SUBMISSIONS = [];
 let activeFilter = 'all';
 let searchQuery  = '';
+let currentPage  = 1;
+const itemsPerPage = 5;
 
 function esc(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -149,12 +151,19 @@ function renderTable() {
 
   if (filtered.length === 0) {
     emptyState.style.display = 'block';
+    document.getElementById('paginationContainer').style.display = 'none';
     return;
   }
 
   emptyState.style.display = 'none';
 
-  filtered.forEach(f => {
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filtered.slice(startIndex, endIndex);
+
+  paginatedData.forEach(f => {
     const tr = document.createElement('tr');
     const avatarGender = f.gender === 'female' ? 'female' : 'male';
     const hasSubmission = Number.isFinite(Number(f.submissionId));
@@ -167,7 +176,7 @@ function renderTable() {
       <td>
         <div class="td-faculty">
           <div class="td-avatar">
-            <img src="../assets/images/avatar-${avatarGender}.svg" alt="${esc(f.name)}" />
+            <img src="../assets/images/star.png" alt="${esc(f.name)}" />
           </div>
           <div>
             <p class="td-name">${esc(f.name)}</p>
@@ -191,6 +200,89 @@ function renderTable() {
 
     tbody.appendChild(tr);
   });
+
+  renderPagination(totalPages, filtered.length);
+}
+
+// ─────────────────────────────────────────────
+//  RENDER PAGINATION
+// ─────────────────────────────────────────────
+function renderPagination(totalPages, totalItems) {
+  const container = document.getElementById('paginationContainer');
+  if (!container) return;
+
+  if (totalPages <= 1) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'flex';
+  container.innerHTML = '';
+
+  // Info text
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+  const info = document.createElement('div');
+  info.className = 'pagination-info';
+  info.textContent = `Showing ${startItem}-${endItem} of ${totalItems}`;
+  container.appendChild(info);
+
+  const controls = document.createElement('div');
+  controls.className = 'pagination-controls';
+
+  // Previous button
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'pagination-btn';
+  prevBtn.innerHTML = '←';
+  prevBtn.disabled = currentPage === 1;
+  prevBtn.onclick = () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderTable();
+    }
+  };
+  controls.appendChild(prevBtn);
+
+  // Page numbers
+  for (let i = 1; i <= totalPages; i++) {
+    if (
+      i === 1 ||
+      i === totalPages ||
+      (i >= currentPage - 1 && i <= currentPage + 1)
+    ) {
+      const pageBtn = document.createElement('button');
+      pageBtn.className = `pagination-btn ${i === currentPage ? 'pagination-btn--active' : ''}`;
+      pageBtn.textContent = i;
+      pageBtn.onclick = () => {
+        currentPage = i;
+        renderTable();
+      };
+      controls.appendChild(pageBtn);
+    } else if (
+      i === currentPage - 2 ||
+      i === currentPage + 2
+    ) {
+      const dots = document.createElement('span');
+      dots.className = 'pagination-dots';
+      dots.textContent = '...';
+      controls.appendChild(dots);
+    }
+  }
+
+  // Next button
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'pagination-btn';
+  nextBtn.innerHTML = '→';
+  nextBtn.disabled = currentPage === totalPages;
+  nextBtn.onclick = () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderTable();
+    }
+  };
+  controls.appendChild(nextBtn);
+
+  container.appendChild(controls);
 }
 
 // ─────────────────────────────────────────────
@@ -204,6 +296,7 @@ document.querySelectorAll('.filter-tab').forEach(tab => {
 
     tab.classList.add('filter-tab--active');
     activeFilter = tab.dataset.filter;
+    currentPage = 1; // Reset to first page when filter changes
     renderTable();
   });
 });
@@ -213,6 +306,7 @@ document.querySelectorAll('.filter-tab').forEach(tab => {
 // ─────────────────────────────────────────────
 document.getElementById('searchInput')?.addEventListener('input', event => {
   searchQuery = event.target.value;
+  currentPage = 1; // Reset to first page when searching
   renderTable();
 });
 

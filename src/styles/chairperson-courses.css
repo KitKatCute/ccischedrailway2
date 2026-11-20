@@ -14,7 +14,7 @@
   align-items: center;
   gap: 8px;
   background: var(--white);
-  border: 2px solid rgba(128, 0, 0, 0.35);
+  border: 2px solid var(--maroon);
   border-radius: var(--radius-pill);
   padding: 11px 22px;
   font-family: 'Raleway', sans-serif;
@@ -34,65 +34,166 @@
 }
 
 /* ═══════════════════════════════════
-   COURSE SUMMARY CARD
+   COURSE SUMMARY FEATURE CARDS
 ═══════════════════════════════════ */
-.crs-summary-card {
-  background: var(--maroon);
-  border-radius: var(--radius-card);
-  padding: 24px 32px 28px;
-  box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.crs-summary-card__title {
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.16em;
-  color: rgba(255, 255, 255, 0.80);
-  text-align: center;
-}
-
-.crs-summary-stats {
+.crs-summary-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 
-.crs-stat {
-  background: rgba(255, 255, 255, 0.10);
-  border: 1.5px solid rgba(255, 255, 255, 0.18);
-  border-radius: 14px;
-  padding: 20px 12px;
+.crs-feature-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 22px 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(128, 0, 0, 0.12);
+  border-top: 3px solid var(--maroon);
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.crs-feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-top-color: var(--maroon-dk);
+}
+
+.crs-feature-card__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.crs-feature-card__icon--maroon {
+  background: linear-gradient(135deg, rgba(128, 0, 0, 0.10), rgba(128, 0, 0, 0.15));
+  color: var(--maroon);
+}
+
+.crs-feature-card__content {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-  transition: background 0.18s;
+  width: 100%;
+  text-align: left;
 }
 
-.crs-stat:hover {
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.crs-stat__val {
-  font-size: 2.4rem;
-  font-weight: 900;
-  color: var(--white);
-  line-height: 1;
-}
-
-.crs-stat__lbl {
-  font-size: 0.65rem;
+.crs-feature-card__title {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.85rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.65);
-  text-align: center;
+  color: var(--maroon);
+  margin: 0;
+  line-height: 1.3;
+  text-align: left;
+}
+
+.crs-feature-card__description {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.70rem;
+  font-weight: 500;
+  color: #888;
+  line-height: 1.5;
+  margin: 0;
+  text-align: left;
+}
+
+.crs-feature-card__description span {
+  font-family: 'Raleway', sans-serif;
+  font-weight: 700;
+  color: #111;
 }
 
 /* ═══════════════════════════════════
-   LOWER TWO-COLUMN GRID
+   COURSES PORTAL CARD
+═══════════════════════════════════ */
+.crs-portal-card {
+  background: var(--white);
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(128, 0, 0, 0.12);
+  border-left: 4px solid var(--maroon);
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 180px;
+  justify-content: center;
+}
+
+.crs-portal-card__label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--maroon);
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  margin: 0;
+  padding: 8px 14px;
+  border: 1.5px solid var(--maroon);
+  border-radius: 8px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.crs-portal-card__description {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 900px;
+}
+
+.crs-portal-card__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.crs-portal-btn {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.80rem;
+  font-weight: 800;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.04em;
+}
+
+.crs-portal-btn--primary {
+  background: var(--maroon);
+  color: var(--white);
+}
+
+.crs-portal-btn--primary:hover {
+  background: #660000;
+  box-shadow: 0 4px 12px rgba(128, 0, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+.crs-portal-btn--secondary {
+  background: var(--white);
+  color: var(--maroon);
+  border: 2px solid var(--maroon);
+}
+
+.crs-portal-btn--secondary:hover {
+  background: var(--maroon-lt);
+  transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════
+   LOWER TWO-COLUMN GRID (REMOVED)
 ═══════════════════════════════════ */
 .crs-lower {
   display: grid;
@@ -349,19 +450,39 @@
 .crs-cov-fill {
   height: 100%;
   border-radius: 99px;
-  background: var(--maroon);
+  background: #E5E7EB; /* default: 0% coverage */
   width: 0%; /* animated by JS */
   transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 100% coverage — green */
+.crs-cov-fill--green {
+  background: linear-gradient(90deg, #6BBF8E, #4DA872);
+}
+
+/* 50–99% coverage — yellow/amber */
+.crs-cov-fill--yellow {
+  background: linear-gradient(90deg, #FFB81C, #E8A324);
+}
+
+/* 1–49% coverage — maroon */
+.crs-cov-fill--maroon {
+  background: linear-gradient(90deg, #B05555, #954040);
 }
 
 .crs-cov-pct {
   font-size: 0.66rem;
   font-weight: 800;
-  color: var(--maroon);
+  color: #9CA3AF; /* default: no coverage */
   width: 30px;
   text-align: right;
   flex-shrink: 0;
 }
+
+/* Label color tiers */
+.crs-cov-pct--green  { color: #4DA872; }
+.crs-cov-pct--yellow { color: #C9931A; }
+.crs-cov-pct--maroon { color: #954040; }
 
 /* ── Coverage card footer ── */
 .crs-coverage-footer {
@@ -397,16 +518,12 @@
    RESPONSIVE
 ═══════════════════════════════════ */
 @media (max-width: 1100px) {
-  .crs-lower {
+  .crs-summary-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 740px) {
-  .crs-summary-stats {
-    grid-template-columns: 1fr;
-  }
-
   .crs-filters {
     flex-direction: column;
     align-items: flex-start;
@@ -414,6 +531,14 @@
 
   .crs-search-wrap {
     margin-left: 0;
+    width: 100%;
+  }
+
+  .crs-portal-card__actions {
+    flex-direction: column;
+  }
+
+  .crs-portal-btn {
     width: 100%;
   }
 }

@@ -21,11 +21,13 @@
     <aside class="sidebar">
 
       <div class="sidebar__logo">
-        <img src="../assets/images/logo.svg" alt="CCISched logo" width="38" height="38" />
+        <img src="../assets/images/logo.svg" alt="CCISched logo" width="48" height="48" />
         <span class="sidebar__logo-text">CCISCHED</span>
       </div>
 
       <nav class="sidebar__nav">
+
+        <div class="sidebar__category">Navigation</div>
 
         <a href="dashboard.html" class="sidebar__link sidebar__link--active">
           <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
@@ -76,12 +78,22 @@
           <span>Notifications</span>
         </a>
 
+        <div class="sidebar__category">System</div>
+
         <a href="audit-log.html" class="sidebar__link">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path d="M12 3L4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
             <path d="M8.5 12l2.5 2.5L15.5 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <span>Audit Log</span>
+        </a>
+
+        <a href="profile.html" class="sidebar__link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <span>Edit Profile</span>
         </a>
 
       </nav>
@@ -187,126 +199,99 @@
           <!-- ══ LEFT COLUMN ══ -->
           <div class="cp-main">
 
-            <!-- TOP ROW: Schedule Completion + Room Availability side by side -->
-            <div class="cp-top-row">
+            <!-- TOP ROW: Compact stat cards -->
+            <div class="cp-stat-grid">
 
-              <!-- Schedule Completion Progress card -->
-              <div class="cp-card cp-card--progress cp-card--clickable" onclick="window.location.href='schedule-completion.html'">
-                <p class="cp-card__title">SCHEDULE COMPLETION PROGRESS</p>
-
-                <div class="cp-donut-row">
-
-                  <!-- Sections coverage donut -->
-                  <div class="cp-donut-wrap">
-                    <div class="cp-donut" id="donutBSIT">
-                      <svg class="cp-donut__svg" viewBox="0 0 100 100">
-                        <circle class="cp-donut__track" cx="50" cy="50" r="38"/>
-                        <circle class="cp-donut__fill" cx="50" cy="50" r="38" id="donutBSITFill"/>
-                      </svg>
-                      <span class="cp-donut__label" id="donutBSITLabel">—</span>
-                    </div>
-                    <p class="cp-donut__caption">SECTIONS COVERED</p>
-                  </div>
-
-                  <!-- Availability submitted donut -->
-                  <div class="cp-donut-wrap">
-                    <div class="cp-donut" id="donutBSCS">
-                      <svg class="cp-donut__svg" viewBox="0 0 100 100">
-                        <circle class="cp-donut__track" cx="50" cy="50" r="38"/>
-                        <circle class="cp-donut__fill" cx="50" cy="50" r="38" id="donutBSCSFill"/>
-                      </svg>
-                      <span class="cp-donut__label" id="donutBSCSLabel">—</span>
-                    </div>
-                    <p class="cp-donut__caption">AVAILABILITY SUBMITTED</p>
-                  </div>
-
+              <!-- Sections Covered -->
+              <div class="cp-stat-card cp-stat-card--clickable" onclick="window.location.href='schedule-completion.html'">
+                <div class="cp-stat-card__icon cp-stat-card__icon--maroon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div class="cp-stat-card__info">
+                  <p class="cp-stat-card__title">SECTIONS COVERED</p>
+                  <p class="cp-stat-card__value" id="sectionsValue">—</p>
+                  <p class="cp-stat-card__subtitle">Active courses this term</p>
                 </div>
               </div>
 
-              <!-- Room Availability card -->
-              <div class="cp-card cp-card--rooms cp-card--clickable" onclick="window.location.href='room-availability.html'">
-                <p class="cp-card__title">ROOM AVAILABILITY</p>
-
-                <div class="cp-rooms-row">
-                  <!-- Lecture rooms -->
-                  <div class="cp-room-wrap">
-                    <div class="cp-room-icon cp-room-icon--lecture">
-                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-                        <rect x="3" y="5" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/>
-                        <path d="M7 9h10M7 12h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                        <rect x="3" y="18" width="18" height="1" fill="currentColor" opacity="0.3"/>
-                      </svg>
-                    </div>
-                    <div class="cp-room-info">
-                      <p class="cp-room-count" id="lectureCount">12</p>
-                      <p class="cp-room-label">Lecture Rooms</p>
-                    </div>
-                  </div>
-
-                  <!-- Laboratory rooms -->
-                  <div class="cp-room-wrap">
-                    <div class="cp-room-icon cp-room-icon--lab">
-                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 3v7l-4 8h14l-4-8V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M9 3h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                        <circle cx="12" cy="15" r="1" fill="currentColor"/>
-                        <circle cx="9" cy="16" r="0.5" fill="currentColor"/>
-                        <circle cx="15" cy="16" r="0.5" fill="currentColor"/>
-                      </svg>
-                    </div>
-                    <div class="cp-room-info">
-                      <p class="cp-room-count" id="labCount">8</p>
-                      <p class="cp-room-label">Laboratory Rooms</p>
-                    </div>
-                  </div>
+              <!-- Faculty Availability Submitted -->
+              <div class="cp-stat-card cp-stat-card--clickable" onclick="window.location.href='faculty-availability-submissions.html'">
+                <div class="cp-stat-card__icon cp-stat-card__icon--green">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
                 </div>
-
-                <p class="cp-rooms-hint">Click to view specific rooms</p>
-              </div>
-
-            </div><!-- /cp-top-row -->
-
-            <!-- ── Bottom row: availability bar chart + unassigned courses ── -->
-            <div class="cp-bottom-row">
-
-              <!-- Faculty Availability card -->
-              <div class="cp-card cp-card--avail cp-card--clickable" onclick="window.location.href='faculty-availability-submissions.html'">
-                <p class="cp-card__title">FACULTY AVAILABILITY</p>
-                <div class="cp-bar-chart" id="availBarChart">
-                  <!-- bars injected by JS -->
-                </div>
-                <div class="cp-bar-labels">
-                  <span>Submitted</span>
-                  <span>Pendings</span>
+                <div class="cp-stat-card__info">
+                  <p class="cp-stat-card__title">AVAILABILITY SUBMITTED</p>
+                  <p class="cp-stat-card__value" id="facultySubmittedValue">—</p>
+                  <p class="cp-stat-card__subtitle">Total faculty completed</p>
                 </div>
               </div>
 
-              <!-- Unassigned Courses card -->
-              <div class="cp-card cp-card--unassigned cp-card--clickable" onclick="window.location.href='assign-courses.html'">
-                <p class="cp-card__title">UNASSIGNED COURSES</p>
-                <ul class="cp-unassigned-list" id="unassignedList">
-                  <!-- items injected by JS -->
-                </ul>
+              <!-- Pending Assignments -->
+              <div class="cp-stat-card cp-stat-card--clickable" onclick="window.location.href='faculty-availability-submissions.html'">
+                <div class="cp-stat-card__icon cp-stat-card__icon--orange">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div class="cp-stat-card__info">
+                  <p class="cp-stat-card__title">PENDING SUBMISSIONS</p>
+                  <p class="cp-stat-card__value" id="pendingValue">—</p>
+                  <p class="cp-stat-card__subtitle">Awaiting faculty response</p>
+                </div>
               </div>
 
+              <!-- Unassigned Courses -->
+              <div class="cp-stat-card cp-stat-card--clickable" onclick="window.location.href='assign-courses.html'">
+                <div class="cp-stat-card__icon cp-stat-card__icon--blue">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 7h6M10 11h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div class="cp-stat-card__info">
+                  <p class="cp-stat-card__title">UNASSIGNED COURSES</p>
+                  <p class="cp-stat-card__value" id="unassignedValue">—</p>
+                  <p class="cp-stat-card__subtitle">Requires faculty assignment</p>
+                </div>
+              </div>
+
+            </div><!-- /cp-stat-grid -->
+
+            <!-- Chairperson Portal Card -->
+            <div class="cp-portal-card">
+              <p class="cp-portal-card__label">CHAIRPERSON PORTAL</p>
+              <p class="cp-portal-card__description">
+                Manage faculty assignments, oversee scheduling operations, monitor platform activity, and track grades. 
+                Review and approve faculty availability submissions and course assignments.
+              </p>
+              <div class="cp-portal-card__actions">
+                <button class="cp-portal-btn cp-portal-btn--primary" onclick="window.location.href='faculty.html'">
+                  Manage Faculty
+                </button>
+                <button class="cp-portal-btn cp-portal-btn--secondary" onclick="window.location.href='profile.html'">
+                  Review Chairperson Profile
+                </button>
+              </div>
             </div>
+
           </div>
 
           <!-- ══ RIGHT COLUMN — Profile panel ══ -->
           <aside class="cp-profile">
 
             <div class="cp-profile__avatar-wrap">
-              <img src="../assets/images/avatar-male.svg" alt="Chairperson avatar" class="cp-profile__avatar-img" />
+              <img src="../assets/images/star.png" alt="Chairperson avatar" class="cp-profile__avatar-img" />
             </div>
             <p class="cp-profile__name">Loading…</p>
             <p class="cp-profile__role">Chairperson</p>
-
-            <button class="cp-profile__edit-btn" onclick="window.location.href='profile.html'">
-              <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                <path d="M9.5 2.5L11.5 4.5L4.5 11.5H2.5V9.5L9.5 2.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-              </svg>
-              EDIT PROFILE
-            </button>
 
             <div class="cp-profile__divider"></div>
 

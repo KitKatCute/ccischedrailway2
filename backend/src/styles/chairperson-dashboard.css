@@ -1,0 +1,481 @@
+/* =============================================
+   CCISched — Chairperson Dashboard
+   Extends faculty-dashboard.css variables/base
+============================================= */
+
+/* ── Main two-column layout: wide left + narrow profile right ── */
+.cp-layout {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── Left column stacks vertically ── */
+.cp-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ═══════════════════════════════════
+   COMPACT STAT CARDS GRID
+═══════════════════════════════════ */
+.cp-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.cp-stat-card {
+  background: var(--white);
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 20px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.25s ease;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 3px solid transparent;
+}
+
+.cp-stat-card--clickable {
+  cursor: pointer;
+}
+
+.cp-stat-card--clickable:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+/* Card-specific top borders matching icon colors */
+.cp-stat-card:has(.cp-stat-card__icon--maroon) {
+  border-top-color: rgba(128, 0, 0, 0.85);
+}
+
+.cp-stat-card:has(.cp-stat-card__icon--maroon):hover {
+  border-top-color: #800000;
+}
+
+.cp-stat-card:has(.cp-stat-card__icon--green) {
+  border-top-color: rgba(34, 139, 34, 0.85);
+}
+
+.cp-stat-card:has(.cp-stat-card__icon--green):hover {
+  border-top-color: #228B22;
+}
+
+.cp-stat-card:has(.cp-stat-card__icon--orange) {
+  border-top-color: rgba(255, 140, 0, 0.85);
+}
+
+.cp-stat-card:has(.cp-stat-card__icon--orange):hover {
+  border-top-color: #FF8C00;
+}
+
+.cp-stat-card:has(.cp-stat-card__icon--blue) {
+  border-top-color: rgba(30, 144, 255, 0.85);
+}
+
+.cp-stat-card:has(.cp-stat-card__icon--blue):hover {
+  border-top-color: #1E90FF;
+}
+
+.cp-stat-card__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.cp-stat-card--clickable:hover .cp-stat-card__icon {
+  transform: scale(1.08);
+}
+
+.cp-stat-card__icon--maroon {
+  background: linear-gradient(135deg, rgba(128, 0, 0, 0.10), rgba(128, 0, 0, 0.15));
+  color: #800000;
+}
+
+.cp-stat-card__icon--green {
+  background: linear-gradient(135deg, rgba(34, 139, 34, 0.10), rgba(34, 139, 34, 0.15));
+  color: #228B22;
+}
+
+.cp-stat-card__icon--orange {
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.10), rgba(255, 140, 0, 0.15));
+  color: #FF8C00;
+}
+
+.cp-stat-card__icon--blue {
+  background: linear-gradient(135deg, rgba(30, 144, 255, 0.10), rgba(30, 144, 255, 0.15));
+  color: #1E90FF;
+}
+
+.cp-stat-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.cp-stat-card__title {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #888888;
+  line-height: 1.2;
+  margin: 0;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.cp-stat-card__value {
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: #222;
+  line-height: 1;
+  margin: 0;
+}
+
+.cp-stat-card__subtitle {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: #999999;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.cp-stat-card__label {
+  font-size: 0.70rem;
+  font-weight: 700;
+  color: #666;
+  line-height: 1.3;
+  margin: 0;
+  margin-top: 4px;
+}
+
+/* ═══════════════════════════════════
+   CHAIRPERSON PORTAL CARD
+═══════════════════════════════════ */
+.cp-portal-card {
+  background: var(--white);
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(128, 0, 0, 0.12);
+  border-left: 4px solid var(--maroon);
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+  min-height: 245px;
+  justify-content: center;
+}
+
+.cp-portal-card__label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--maroon);
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  margin: 0;
+  padding: 8px 14px;
+  border: 1.5px solid var(--maroon);
+  border-radius: 8px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.cp-portal-card__title {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #222;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.cp-portal-card__title span {
+  color: var(--maroon);
+}
+
+.cp-portal-card__description {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 900px;
+}
+
+.cp-portal-card__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.cp-portal-btn {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.80rem;
+  font-weight: 800;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.04em;
+}
+
+.cp-portal-btn--primary {
+  background: var(--maroon);
+  color: var(--white);
+}
+
+.cp-portal-btn--primary:hover {
+  background: #660000;
+  box-shadow: 0 4px 12px rgba(128, 0, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+.cp-portal-btn--secondary {
+  background: var(--white);
+  color: var(--maroon);
+  border: 2px solid var(--maroon);
+}
+
+.cp-portal-btn--secondary:hover {
+  background: var(--maroon-lt);
+  transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════
+   RIGHT PROFILE PANEL
+═══════════════════════════════════ */
+.cp-profile {
+  background: var(--maroon);
+  border-radius: var(--radius-card);
+  padding: 28px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 80px;
+  min-height: 555px;
+  margin-top: -160px; /* stay visible while scrolling */
+}
+
+.cp-profile__avatar-wrap {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #FFB81C;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.cp-profile__avatar-img {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+}
+
+.cp-profile__name {
+  font-size: 1.00rem;
+  font-weight: 900;
+  color: var(--white);
+  text-align: center;
+}
+
+.cp-profile__role {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #FFB81C;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.cp-profile__edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--white);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 9px 18px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  color: var(--maroon);
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s;
+}
+
+.cp-profile__edit-btn:hover {
+  background: var(--maroon-lt);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+}
+
+/* Divider */
+.cp-profile__divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.18);
+  margin: 4px 0;
+}
+
+/* ── Stats grid (3 tiles) ── */
+.cp-profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+.cp-profile-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--white);
+  border: 1px solid var(--maroon);
+  border-radius: 12px;
+  padding: 12px 4px;
+}
+
+.cp-profile-stat__val {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #000000;
+}
+
+.cp-profile-stat__lbl {
+  font-size: 0.60rem;
+  font-weight: 600;
+  color: #888888;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+/* ── Overview list ── */
+.cp-profile-overview {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cp-profile-overview__title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.cp-profile-overview__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cp-profile-overview__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cp-profile-overview__dot--white { background: var(--white); }
+.cp-profile-overview__dot--light { background: rgba(255, 255, 255, 0.45); }
+.cp-profile-overview__dot--gold  { background: #FFD166; }
+
+.cp-profile-overview__label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.cp-profile-overview__value {
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.60);
+  margin-top: 1px;
+}
+
+/* ═══════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════ */
+@media (max-width: 1100px) {
+  .cp-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cp-profile {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 20px;
+    position: static;
+  }
+
+  .cp-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 740px) {
+  .cp-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ── Active semester switch (dashboard banner) ── */
+.sem-switch {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-left: auto;
+  margin-right: 24px;
+}
+
+.sem-switch__label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: #888888;
+}
+
+.sem-switch__select {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #000000;
+  background: #f5f5f5;
+  border: 1.5px solid #d0d0d0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  outline: none;
+}
+
+.sem-switch__select:hover { background: #e8e8e8; }
+.sem-switch__select:disabled { opacity: 0.6; cursor: wait; }
+.sem-switch__select option { color: #222; background: #fff; }

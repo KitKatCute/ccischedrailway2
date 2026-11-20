@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles/login.css" />
+  <link rel="icon" type="image/svg+xml" href="assets/images/logo.svg" />
+</head>
+<body>
+
+  <!-- Animated background -->
+  <div class="bg">
+    <div class="bg__grid"></div>
+    <div class="bg__glow"></div>
+    <div class="bg__blob bg__blob--1"></div>
+    <div class="bg__blob bg__blob--2"></div>
+    <div class="bg__blob bg__blob--3"></div>
+  </div>
+
+  <div class="page">
+
+    <!-- ═══════════════════════════
+         LEFT — Login Card
+    ═══════════════════════════ -->
+    <div class="card">
+      <div class="panel panel--left">
+        <div class="panel__grid"></div>
+        <div class="panel__glow"></div>
+
+        <div class="panel__logo">
+          <svg width="26" height="26" viewBox="0 0 44 44" fill="none">
+            <rect x="1" y="3" width="42" height="40" rx="8" fill="rgba(255,255,255,0.2)"/>
+            <rect x="1" y="3" width="42" height="13" rx="8" fill="rgba(255,255,255,0.3)"/>
+            <rect x="1" y="10" width="42" height="6" fill="rgba(255,255,255,0.3)"/>
+            <rect x="12" y="1" width="4" height="6" rx="2" fill="#FFFFFF" opacity="0.9"/>
+            <rect x="28" y="1" width="4" height="6" rx="2" fill="#FFFFFF" opacity="0.9"/>
+            <circle cx="13" cy="24" r="2.6" fill="#FFFFFF"/>
+            <circle cx="22" cy="24" r="2.6" fill="#FFFFFF"/>
+            <circle cx="31" cy="24" r="2.6" fill="#FFFFFF" opacity="0.4"/>
+            <circle cx="13" cy="33" r="2.6" fill="#FFFFFF" opacity="0.4"/>
+            <circle cx="22" cy="33" r="2.6" fill="#FFFFFF"/>
+            <circle cx="31" cy="33" r="2.6" fill="#FFFFFF"/>
+          </svg>
+          <span>CCISCHED</span>
+        </div>
+
+        <div class="panel__body">
+          <p class="panel__eyebrow">PUP — CCIS</p>
+          <h1 class="panel__title">Hello,<br/>welcome!</h1>
+          <p class="panel__desc">
+            Intelligent faculty assignment and timetable optimization for the
+            Polytechnic University of the Philippines.
+          </p>
+          <a href="index.html" class="panel__btn">← Back to home</a>
+        </div>
+      </div>
+
+      <div class="panel panel--right">
+        <h2 class="form__heading">LOGIN</h2>
+        <p class="form__sub" id="cardSub">CHAIRPERSON PORTAL</p>
+
+        <div class="role-toggle">
+          <button class="role-toggle__btn active" id="btnChairperson" data-role="chairperson">Chairperson</button>
+          <button class="role-toggle__btn" id="btnFaculty" data-role="faculty">Faculty</button>
+        </div>
+
+        <form class="form" id="loginForm" novalidate>
+          <input type="hidden" id="roleInput" value="chairperson" />
+
+          <div class="form__group">
+            <label class="form__label">Email address</label>
+            <div class="form__field">
+              <span class="form__icon">
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M2 15C2 11.686 4.686 9 8 9C11.314 9 14 11.686 14 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <input type="email" id="email" class="form__input" placeholder="jdelacruz@pup.edu.ph" autocomplete="email" required />
+            </div>
+            <span class="form__error" id="emailError"></span>
+          </div>
+
+          <div class="form__group">
+            <label class="form__label">Password</label>
+            <div class="form__field">
+              <span class="form__icon">
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                  <rect x="3" y="7" width="10" height="8" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M5 7V5C5 3.343 6.343 2 8 2C9.657 2 11 3.343 11 5V7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <circle cx="8" cy="11" r="1" fill="currentColor"/>
+                </svg>
+              </span>
+              <input type="password" id="password" class="form__input" placeholder="••••••••••••" autocomplete="current-password" required />
+              <button type="button" class="form__eye" id="togglePassword" aria-label="Toggle password">
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="none" id="eyeIcon">
+                  <path d="M1 8C1 8 3.5 3 8 3C12.5 3 15 8 15 8C15 8 12.5 13 8 13C3.5 13 1 8 1 8Z" stroke="currentColor" stroke-width="1.5"/>
+                  <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+              </button>
+            </div>
+            <span class="form__error" id="passwordError"></span>
+          </div>
+
+          <a href="#" class="form__forgot" id="forgotLink" hidden>Forgot password?</a>
+
+          <button type="submit" class="btn-login" id="submitBtn">LOGIN</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════
+         RIGHT — Animated scene
+    ═══════════════════════════ -->
+    <div class="scene" aria-hidden="true">
+
+      <!-- Timetable card -->
+      <div class="scene__tt-card">
+        <div class="scene__tt-title">Generated Timetable</div>
+        <div class="scene__tt-days">
+          <span class="scene__tt-day">Mon</span>
+          <span class="scene__tt-day">Tue</span>
+          <span class="scene__tt-day">Wed</span>
+          <span class="scene__tt-day">Thu</span>
+          <span class="scene__tt-day">Fri</span>
+        </div>
+        <div class="scene__tt-grid" id="loginTTGrid"></div>
+      </div>
+
+      <!-- Status badge -->
+      <div class="scene__badge-card">
+        <div class="scene__badge-dot"></div>
+        <div class="scene__badge-text">
+          Schedule <span>published</span> — all faculty notified
+        </div>
+      </div>
+
+      <!-- Stat chips -->
+      <div class="scene__chips">
+        <div class="scene__chip">
+          <span class="scene__chip-val">52</span>
+          <span class="scene__chip-lbl">Sections</span>
+        </div>
+        <div class="scene__chip">
+          <span class="scene__chip-val">55</span>
+          <span class="scene__chip-lbl">Faculty</span>
+        </div>
+        <div class="scene__chip">
+          <span class="scene__chip-val">24</span>
+          <span class="scene__chip-lbl">Rooms</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Forgot password (faculty): a temporary password is emailed -->
+  <div class="fp-overlay" id="fpOverlay" hidden>
+    <div class="fp-modal" role="dialog" aria-modal="true" aria-labelledby="fpTitle">
+      <button type="button" class="fp-modal__close" id="fpClose" aria-label="Close">&times;</button>
+      <h3 class="fp-modal__title" id="fpTitle">FORGOT PASSWORD</h3>
+
+      <form id="fpForm" novalidate>
+        <p class="fp-modal__text">
+          Enter your PUP webmail. We'll email you a temporary password that works
+          for 30 minutes. Log in with it and you'll be asked to choose a new password.
+        </p>
+        <div class="form__group">
+          <label class="form__label" for="fpEmail">Email address</label>
+          <div class="form__field">
+            <input type="email" id="fpEmail" class="form__input" placeholder="bgarcia@pup.edu.ph" autocomplete="email" required />
+          </div>
+          <span class="form__error" id="fpError"></span>
+        </div>
+        <button type="submit" class="btn-login" id="fpSubmit">SEND TEMPORARY PASSWORD</button>
+      </form>
+
+      <div id="fpDone" hidden>
+        <p class="fp-modal__text" id="fpDoneText"></p>
+        <button type="button" class="btn-login" id="fpDoneBtn">BACK TO LOGIN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Set a new password (shown after logging in with an emailed temporary password) -->
+  <div class="fp-overlay" id="npOverlay" hidden>
+    <div class="fp-modal" role="dialog" aria-modal="true" aria-labelledby="npTitle">
+      <button type="button" class="fp-modal__close" id="npClose" aria-label="Cancel">&times;</button>
+      <h3 class="fp-modal__title" id="npTitle">SET A NEW PASSWORD</h3>
+      <form id="npForm" novalidate>
+        <p class="fp-modal__text">
+          You logged in with a temporary password. Choose a new password to continue.
+        </p>
+        <div class="form__group">
+          <label class="form__label" for="npPass">New password</label>
+          <div class="form__field">
+            <input type="password" id="npPass" class="form__input" placeholder="At least 6 characters" autocomplete="new-password" required />
+          </div>
+        </div>
+        <div class="form__group">
+          <label class="form__label" for="npConfirm">Confirm new password</label>
+          <div class="form__field">
+            <input type="password" id="npConfirm" class="form__input" placeholder="Re-enter new password" autocomplete="new-password" required />
+          </div>
+          <span class="form__error" id="npError"></span>
+        </div>
+        <button type="submit" class="btn-login" id="npSubmit">SAVE NEW PASSWORD</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="scripts/api.js"></script>
+  <script src="scripts/login.js"></script>
+</body>
+</html>

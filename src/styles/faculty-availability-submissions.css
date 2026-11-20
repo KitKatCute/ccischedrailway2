@@ -8,37 +8,22 @@
 }
 
 .back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: none;
-  color: var(--maroon);
-  font-family: 'Raleway', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: background 0.2s;
-  margin-bottom: 16px;
-}
-
-.back-btn:hover {
-  background: rgba(128, 0, 0, 0.08);
+  display: none;
 }
 
 .page-title {
   font-size: 1.80rem;
   font-weight: 900;
-  color: var(--maroon);
+  color: var(--black);
   margin: 0 0 8px 0;
 }
 
 .page-subtitle {
   font-size: 0.92rem;
-  color: rgba(128, 0, 0, 0.65);
+  color: #888888;
   margin: 0;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #E4E4E4;
 }
 
 /* ═══════════════════════════════════
@@ -59,8 +44,14 @@
   background: var(--white);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-sm);
-  border: 2px solid rgba(128, 0, 0, 0.18);
+  border: none;
+  border-top: 4px solid transparent;
 }
+
+.avail-stat--total { border-top-color: var(--maroon); }
+.avail-stat--submitted { border-top-color: #27AE60; }
+.avail-stat--pending { border-top-color: #E67E22; }
+.avail-stat--rate { border-top-color: #2980B9; }
 
 .avail-stat__icon {
   width: 48px;
@@ -80,14 +71,14 @@
 .avail-stat__val {
   font-size: 1.70rem;
   font-weight: 900;
-  color: var(--maroon);
+  color: var(--black);
   margin: 0 0 2px 0;
   line-height: 1;
 }
 
-.avail-stat--submitted .avail-stat__val { color: #27AE60; }
-.avail-stat--pending   .avail-stat__val { color: #E67E22; }
-.avail-stat--rate      .avail-stat__val { color: #2980B9; }
+.avail-stat--submitted .avail-stat__val { color: var(--black); }
+.avail-stat--pending   .avail-stat__val { color: var(--black); }
+.avail-stat--rate      .avail-stat__val { color: var(--black); }
 
 .avail-stat__lbl {
   font-size: 0.72rem;
@@ -161,7 +152,7 @@
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
-  color: var(--maroon);
+  color: var(--black);
   text-align: left;
   text-transform: uppercase;
   white-space: nowrap;
@@ -198,7 +189,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(128,0,0,0.08), rgba(128,0,0,0.16));
+  background: var(--white);
   border: 2px solid rgba(128,0,0,0.20);
   display: flex;
   align-items: center;
@@ -214,7 +205,7 @@
 
 .td-name {
   font-weight: 800;
-  color: var(--maroon);
+  color: var(--black);
   margin: 0 0 3px 0;
   font-size: 0.88rem;
 }
@@ -236,15 +227,15 @@
 }
 
 .dept-badge--bsit {
-  background: rgba(128, 0, 0, 0.08);
-  color: var(--maroon);
-  border: 1px solid rgba(128, 0, 0, 0.20);
+  background: rgba(234, 179, 8, 0.10);
+  color: var(--black);
+  border: 1px solid rgba(234, 179, 8, 0.30);
 }
 
 .dept-badge--bscs {
-  background: rgba(52, 100, 180, 0.08);
-  color: #2756b1;
-  border: 1px solid rgba(52, 100, 180, 0.20);
+  background: rgba(59, 130, 246, 0.10);
+  color: var(--black);
+  border: 1px solid rgba(59, 130, 246, 0.30);
 }
 
 /* Status badge */
@@ -313,6 +304,69 @@
   font-size: 0.92rem;
   font-weight: 600;
   color: rgba(128, 0, 0, 0.45);
+}
+
+/* ═══════════════════════════════════
+   PAGINATION
+═══════════════════════════════════ */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-top: 1px solid rgba(128, 0, 0, 0.08);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pagination-info {
+  font-size: 0.80rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pagination-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+  border: 2px solid rgba(128, 0, 0, 0.20);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--maroon);
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.80rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: rgba(128, 0, 0, 0.05);
+  border-color: var(--maroon);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pagination-btn--active {
+  background: var(--maroon);
+  color: var(--white);
+  border-color: var(--maroon);
+}
+
+.pagination-dots {
+  padding: 0 8px;
+  font-size: 0.80rem;
+  font-weight: 800;
+  color: #999;
 }
 
 /* ═══════════════════════════════════

@@ -206,26 +206,19 @@ function buildTimetablesPDF() {
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-  const MAROON  = [128, 0, 0];
+  const INK     = [17, 17, 17];
+  const RULE    = [170, 170, 170];
   const margin  = 40;
   const pageW   = doc.internal.pageSize.getWidth();
   const pageH   = doc.internal.pageSize.getHeight();
   let y = margin;
 
-  doc.setFillColor(...MAROON);
-  doc.rect(margin, y, pageW - margin * 2, 46, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
-  doc.text('GENERATED TIMETABLES', margin + 14, y + 20);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text(`${ayParam}   \u00b7   ${semParam}`, margin + 14, y + 36);
-  y += 46 + 22;
+  const L = pdfLetterheadLayout(doc, margin);
+  y = drawPdfTitle(doc, L, 'GENERATED TIMETABLES', `${ayParam}   \u00b7   ${semParam}`);
 
   FACULTY_DATA.forEach(faculty => {
-    if (y > pageH - 110) { doc.addPage(); y = margin; }
-    doc.setTextColor(...MAROON);
+    if (y > L.contentBottom - 70) { doc.addPage(); y = L.contentTop; }
+    doc.setTextColor(...INK);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9.5);
     doc.text(faculty.name, margin, y);
@@ -247,41 +240,33 @@ function buildTimetablesPDF() {
 
     doc.autoTable({
       startY: y,
-      margin: { left: margin, right: margin },
+      margin: { left: margin, right: margin, top: L.contentTop, bottom: pageH - L.contentBottom },
       head, body,
-      theme: 'striped',
-      styles: { fontSize: 8.5, cellPadding: 5, textColor: [30, 30, 30] },
-      headStyles: { fillColor: MAROON, textColor: 255, fontSize: 8, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [255, 248, 248] },
+      theme: 'grid',
+      styles: { fontSize: 8.5, cellPadding: 5, textColor: INK, lineColor: [204, 204, 204], lineWidth: 0.6 },
+      headStyles: { fillColor: [255, 255, 255], textColor: INK, fontSize: 8, fontStyle: 'bold', lineColor: RULE, lineWidth: 0.8 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
     });
     y = doc.lastAutoTable.finalY + 20;
   });
 
-  const pageCount = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text(
-      `CCISched   \u00b7   Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}   \u00b7   Page ${i} of ${pageCount}`,
-      pageW / 2, pageH - 20, { align: 'center' }
-    );
-  }
+  applyPdfLetterhead(doc, L);
 
   const ay  = ayParam.replace(/\s+/g, '');
   const sem = semParam.replace(/\s+/g, '');
   return { doc, filename: `Timetable_${ay}_${sem}.pdf` };
 }
 
-function exportAllToPDF() {
+async function exportAllToPDF() {
+  await loadPdfLetterhead();
   const result = buildTimetablesPDF();
   if (!result) return;
   result.doc.save(result.filename);
   showToast('PDF saved.');
 }
 
-function printAllPDF() {
+async function printAllPDF() {
+  await loadPdfLetterhead();
   const result = buildTimetablesPDF();
   if (!result) return;
   printPdfDoc(result.doc);

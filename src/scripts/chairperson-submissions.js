@@ -106,7 +106,14 @@ function initials(name) {
 }
 
 // ─────────────────────────────────────────────
-//  RENDER ROWS
+//  PAGINATION VARIABLES
+// ─────────────────────────────────────────────
+const ITEMS_PER_PAGE = 5;
+let currentPage = 1;
+let filteredSubmissions = [];
+
+// ─────────────────────────────────────────────
+//  RENDER ROWS WITH PAGINATION
 // ─────────────────────────────────────────────
 function renderTable(filter = 'all', query = '', sort = 'name') {
   const body    = document.getElementById('csBody');
@@ -115,31 +122,39 @@ function renderTable(filter = 'all', query = '', sort = 'name') {
 
   const q = query.trim().toLowerCase();
 
-  let filtered = facultySubmissions.filter(f => {
+  filteredSubmissions = facultySubmissions.filter(f => {
     const matchStatus = filter === 'all' || f.status === filter;
     const matchQuery  = !q || f.faculty_name.toLowerCase().includes(q);
     return matchStatus && matchQuery;
   });
 
-  filtered = filtered.slice().sort((a, b) => {
+  filteredSubmissions = filteredSubmissions.slice().sort((a, b) => {
     if (sort === 'date') {
-      // Undated (never submitted) entries sort last
       if (!a.submittedAtRaw && !b.submittedAtRaw) return a.faculty_name.localeCompare(b.faculty_name);
       if (!a.submittedAtRaw) return 1;
       if (!b.submittedAtRaw) return -1;
-      return new Date(b.submittedAtRaw) - new Date(a.submittedAtRaw);   // newest first
+      return new Date(b.submittedAtRaw) - new Date(a.submittedAtRaw);
     }
     return a.faculty_name.localeCompare(b.faculty_name);
   });
 
-  if (countEl) countEl.textContent = `${filtered.length} faculty`;
+  // Reset to page 1 when filtering/sorting changes
+  currentPage = 1;
 
-  if (!filtered.length) {
+  if (countEl) countEl.textContent = `${filteredSubmissions.length} faculty`;
+
+  if (!filteredSubmissions.length) {
     body.innerHTML = `<div class="cs-empty"><p>No submissions match the current filter.</p></div>`;
+    renderPagination();
     return;
   }
 
-  body.innerHTML = filtered.map(f => `
+  // Paginate
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const pageData = filteredSubmissions.slice(startIndex, endIndex);
+
+  body.innerHTML = pageData.map(f => `
     <div class="cs-row">
       <div class="cs-row__name">
         <div class="cs-row__avatar">${initials(f.faculty_name)}</div>
@@ -178,6 +193,130 @@ function renderTable(filter = 'all', query = '', sort = 'name') {
   body.querySelectorAll('[data-delete]').forEach(btn => {
     btn.addEventListener('click', () => handleDelete(btn.dataset.delete, btn.dataset.name));
   });
+
+  renderPagination();
+}
+
+function renderPagination() {
+  const totalPages = Math.ceil(filteredSubmissions.length / ITEMS_PER_PAGE);
+  const startItem = filteredSubmissions.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, filteredSubmissions.length);
+  
+  const startEl = document.getElementById('csPaginationStart');
+  const endEl = document.getElementById('csPaginationEnd');
+  const totalEl = document.getElementById('csPaginationTotal');
+  
+  if (startEl) startEl.textContent = startItem;
+  if (endEl) endEl.textContent = endItem;
+  if (totalEl) totalEl.textContent = filteredSubmissions.length;
+  
+  const prevBtn = document.getElementById('csPrevPage');
+  const nextBtn = document.getElementById('csNextPage');
+  
+  if (prevBtn) prevBtn.disabled = currentPage === 1;
+  if (nextBtn) nextBtn.disabled = currentPage >= totalPages || totalPages === 0;
+  
+  const pagesContainer = document.getElementById('csPaginationPages');
+  if (!pagesContainer) return;
+  
+  pagesContainer.innerHTML = '';
+  
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) {
+      pagesContainer.appendChild(createPageButton(i));
+    }
+  } else {
+    pagesContainer.appendChild(createPageButton(1));
+    
+    if (currentPage > 3) {
+      pagesContainer.appendChild(createEllipsis());
+    }
+    
+    let startPage = Math.max(2, currentPage - 1);
+    let endPage = Math.min(totalPages - 1, currentPage + 1);
+    
+    if (currentPage <= 3) endPage = 4;
+    if (currentPage >= totalPages - 2) startPage = totalPages - 3;
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pagesContainer.appendChild(createPageButton(i));
+    }
+    
+    if (currentPage < totalPages - 2) {
+      pagesContainer.appendChild(createEllipsis());
+    }
+    
+    pagesContainer.appendChild(createPageButton(totalPages));
+  }
+}
+
+function createPageButton(pageNum) {
+  const btn = document.createElement('button');
+  btn.className = `cs-pagination__page ${pageNum === currentPage ? 'cs-pagination__page--active' : ''}`;
+  btn.textContent = pageNum;
+  btn.addEventListener('click', () => {
+    currentPage = pageNum;
+    renderTableCurrentPage();
+  });
+  return btn;
+}
+
+function createEllipsis() {
+  const span = document.createElement('span');
+  span.className = 'cs-pagination__ellipsis';
+  span.textContent = '...';
+  return span;
+}
+
+function renderTableCurrentPage() {
+  const body = document.getElementById('csBody');
+  if (!body) return;
+
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const pageData = filteredSubmissions.slice(startIndex, endIndex);
+
+  body.innerHTML = pageData.map(f => `
+    <div class="cs-row">
+      <div class="cs-row__name">
+        <div class="cs-row__avatar">${initials(f.faculty_name)}</div>
+        <div><p class="cs-row__name-text">${f.faculty_name}</p></div>
+      </div>
+      <span class="cs-row__type">${f.type}</span>
+      <div class="cs-row__slots">
+        <span class="cs-slot-count ${f.slotCount === 0 ? 'cs-slot-count--zero' : ''}">${f.slotCount}</span>
+      </div>
+      <div class="cs-row__status">${statusBadge(f.status)}</div>
+      <span class="cs-row__date">${f.submittedDate || '—'}</span>
+      <div class="cs-row__actions">
+        <button class="cs-view-btn" data-view="${f.id}" title="View details">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M1 8C1 8 3.5 3 8 3C12.5 3 15 8 15 8C15 8 12.5 13 8 13C3.5 13 1 8 1 8Z" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          View
+        </button>
+        <button class="cs-delete-btn" data-delete="${f.id}" data-name="${f.faculty_name}" title="Delete submission">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+            <path d="M2 4h12M6 4V2.7a.7.7 0 01.7-.7h2.6a.7.7 0 01.7.7V4M12.3 4l-.6 9.3a1 1 0 01-1 .9H5.3a1 1 0 01-1-.9L3.7 4"
+                  stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  body.querySelectorAll('[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.location.href = `submission-detail.html?id=${btn.dataset.view}`;
+    });
+  });
+
+  body.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.addEventListener('click', () => handleDelete(btn.dataset.delete, btn.dataset.name));
+  });
+
+  renderPagination();
 }
 
 async function handleDelete(submissionId, name) {
@@ -214,6 +353,24 @@ document.getElementById('sortBy')?.addEventListener('change', function () {
 document.getElementById('searchInput')?.addEventListener('input', function () {
   searchQuery = this.value;
   renderTable(activeFilter, searchQuery, sortBy);
+});
+
+// ─────────────────────────────────────────────
+//  PAGINATION CONTROLS
+// ─────────────────────────────────────────────
+document.getElementById('csPrevPage')?.addEventListener('click', () => {
+  if (currentPage > 1) {
+    currentPage--;
+    renderTableCurrentPage();
+  }
+});
+
+document.getElementById('csNextPage')?.addEventListener('click', () => {
+  const totalPages = Math.ceil(filteredSubmissions.length / ITEMS_PER_PAGE);
+  if (currentPage < totalPages) {
+    currentPage++;
+    renderTableCurrentPage();
+  }
 });
 
 // ─────────────────────────────────────────────

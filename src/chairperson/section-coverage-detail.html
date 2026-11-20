@@ -132,40 +132,77 @@
             </svg>
             Back to Courses
           </button>
-          <div class="page-title-row">
+          <div class="page-title-row" style="padding-bottom: 16px; border-bottom: 2px solid rgba(0, 0, 0, 0.1);">
             <div>
-              <h1 class="page-title">Section Assignment Coverage</h1>
-              <p class="page-subtitle">Detailed breakdown of sections per course for the current semester</p>
+              <h1 class="page-title" style="color: black;">Section Assignment Coverage</h1>
+              <p class="page-subtitle" style="color: gray;">Detailed breakdown of sections per course for the current semester</p>
             </div>
-            <span class="overall-chip" id="overallChip">82% Overall</span>
           </div>
         </div>
 
         <!-- Summary stats -->
         <div class="scd-summary">
           <div class="scd-stat">
-            <p class="scd-stat__val" id="statTotalCourses">0</p>
-            <p class="scd-stat__lbl">Total Courses</p>
-          </div>
-          <div class="scd-stat">
-            <p class="scd-stat__val" id="statTotalSections">0</p>
-            <p class="scd-stat__lbl">Total Sections</p>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="position: absolute; left: 32px;">
+              <path d="M9 11l3 3L22 4" stroke="#800000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="#800000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="scd-stat__content">
+              <p class="scd-stat__lbl">Sections Covered</p>
+              <p class="scd-stat__val" id="statCovered">0</p>
+              <p class="scd-stat__sublabel">Active courses this term</p>
+            </div>
           </div>
           <div class="scd-stat scd-stat--covered">
-            <p class="scd-stat__val" id="statCovered">0</p>
-            <p class="scd-stat__lbl">Sections Covered</p>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="position: absolute; left: 32px;">
+              <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#27AE60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="8.5" cy="7" r="4" stroke="#27AE60" stroke-width="2"/>
+              <path d="M20 8v6M23 11h-6" stroke="#27AE60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="scd-stat__content">
+              <p class="scd-stat__lbl">Availability Submitted</p>
+              <p class="scd-stat__val" id="statTotalSections">0</p>
+              <p class="scd-stat__sublabel">Total faculty completed</p>
+            </div>
+          </div>
+          <div class="scd-stat scd-stat--pending">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="position: absolute; left: 32px;">
+              <circle cx="12" cy="12" r="10" stroke="#F39C12" stroke-width="2"/>
+              <path d="M12 6v6l4 2" stroke="#F39C12" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <div class="scd-stat__content">
+              <p class="scd-stat__lbl">Pending Submissions</p>
+              <p class="scd-stat__val" id="statTotalCourses">0</p>
+              <p class="scd-stat__sublabel">Awaiting faculty response</p>
+            </div>
           </div>
           <div class="scd-stat scd-stat--uncovered">
-            <p class="scd-stat__val" id="statUncovered">0</p>
-            <p class="scd-stat__lbl">Sections Uncovered</p>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="position: absolute; left: 32px;">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#3498DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14 2v6h6M12 18v-6M9 15h6" stroke="#3498DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="scd-stat__content">
+              <p class="scd-stat__lbl">Unassigned Courses</p>
+              <p class="scd-stat__val" id="statUncovered">0</p>
+              <p class="scd-stat__sublabel">Requires faculty assignment</p>
+            </div>
           </div>
         </div>
 
         <!-- Filter tabs -->
-        <div class="scd-filters">
-          <button class="scd-tab scd-tab--active" data-filter="all">All Courses</button>
-          <button class="scd-tab" data-filter="complete">Fully Covered</button>
-          <button class="scd-tab" data-filter="partial">Partially Covered</button>
+        <div class="scd-filters-wrapper">
+          <div class="scd-filters">
+            <button class="scd-tab scd-tab--active" data-filter="all">All Courses</button>
+            <button class="scd-tab" data-filter="complete">Fully Covered</button>
+            <button class="scd-tab" data-filter="partial">Partially Covered</button>
+          </div>
+          <div class="scd-search">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="7" cy="7" r="5" stroke="#666" stroke-width="1.6"/>
+              <path d="M11 11L14 14" stroke="#666" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <input type="text" id="searchCourseInput" placeholder="Search course, teacher, or section..." class="scd-search-input" />
+          </div>
         </div>
 
         <!-- Course cards list -->

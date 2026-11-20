@@ -16,6 +16,7 @@ from collections import defaultdict
 
 from database import db
 from models import Notification, Semester, User
+from scope import chairpersons_for
 
 
 def _sem_label(sem: Semester | None) -> str:
@@ -34,8 +35,10 @@ def _plural(n: int, word: str) -> str:
     return f"{n} {word}" + ("" if n == 1 else "s")
 
 
-def _confirm_to_chairpersons(notif_type: str, title: str, message: str):
-    for chair in User.query.filter_by(role="chairperson").all():
+def _confirm_to_chairpersons(notif_type: str, title: str, message: str, faculty_ids=None):
+    """Tell chairpersons. With faculty_ids, only chairpersons whose department
+    covers those faculty (plus unscoped chairpersons) are notified."""
+    for chair in chairpersons_for(faculty_ids):
         _notify(chair.id, notif_type, title, message)
 
 
@@ -56,6 +59,7 @@ def notify_assignments_distributed(sem: Semester | None, sections_by_faculty: di
             "assignment_distributed", "Assignments Distributed",
             f"Teaching assignments for the {label} were distributed to "
             f"{_plural(len(sections_by_faculty), 'faculty member')}.",
+            faculty_ids=list(sections_by_faculty),
         )
 
 
@@ -74,4 +78,16 @@ def notify_timetables_distributed(sem: Semester | None, entries_by_faculty: dict
             "timetable_distributed", "Timetables Distributed",
             f"Timetables for the {label} were distributed to "
             f"{_plural(len(entries_by_faculty), 'faculty member')}.",
+            faculty_ids=list(entries_by_faculty),
         )
+
+
+def notify_password_reset_requested(faculty: User):
+    """A faculty member asked for a password reset — tell the chairperson(s) responsible for them.
+    Adds to the session only; the caller commits."""
+    _confirm_to_chairpersons(
+        "password_reset_request", "Password Reset Request",
+        f"{faculty.first_name} {faculty.last_name} ({faculty.employee_number}) "
+        f"requested a password reset. Open Faculty \u2192 Password Requests to reset it.",
+        faculty_ids=[faculty.id],
+    )

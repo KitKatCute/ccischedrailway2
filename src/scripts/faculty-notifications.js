@@ -22,10 +22,17 @@ if (topbarDate) {
 const list         = document.getElementById('notifList');
 const emptyState   = document.getElementById('notifEmpty');
 const unreadCountEl = document.getElementById('unreadCount');
+const pager        = document.getElementById('notifPager');
+const prevPageBtn  = document.getElementById('prevPageBtn');
+const nextPageBtn  = document.getElementById('nextPageBtn');
+const pageLabel    = document.getElementById('pageLabel');
+const notifCount   = document.getElementById('notifCount');
 
 let notifications = [];
 let activeFilter  = 'all';
 let searchQuery   = '';
+let currentPage   = 1;
+const itemsPerPage = 10;
 
 function getItems() {
   return [...list.querySelectorAll('.notif-item')];
@@ -43,8 +50,45 @@ function syncUnreadBadge() {
 }
 
 function checkEmpty() {
-  const visible = getItems().filter(i => i.style.display !== 'none');
-  emptyState.style.display = visible.length === 0 ? 'flex' : 'none';
+  const filtered = getFilteredNotifications();
+  emptyState.style.display = filtered.length === 0 ? 'flex' : 'none';
+  if (pager) pager.style.display = filtered.length === 0 ? 'none' : 'flex';
+}
+
+function getFilteredNotifications() {
+  const q = searchQuery.trim().toLowerCase();
+  return notifications.filter(notif => {
+    const meta = metaFor(notif.notif_type);
+    
+    const inTab = activeFilter === 'all'    ? true :
+                  activeFilter === 'unread' ? !notif.is_read :
+                  meta.category === activeFilter;
+
+    const text = (notif.title + ' ' + notif.message).toLowerCase();
+    const inSearch = !q || text.includes(q);
+
+    return inTab && inSearch;
+  });
+}
+
+function updatePagination(filtered) {
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  
+  if (notifCount) {
+    notifCount.textContent = `${filtered.length} notification${filtered.length === 1 ? '' : 's'}`;
+  }
+  
+  if (pageLabel) {
+    pageLabel.textContent = totalPages > 0 ? `Page ${currentPage} of ${totalPages}` : '';
+  }
+  
+  if (prevPageBtn) {
+    prevPageBtn.disabled = currentPage <= 1;
+  }
+  
+  if (nextPageBtn) {
+    nextPageBtn.disabled = currentPage >= totalPages;
+  }
 }
 
 // ── What each backend notif_type means for this page: which tab it belongs
@@ -90,6 +134,7 @@ const TYPE_META = {
   timetable_distributed:  { category: 'system',    tagLabel: 'System',      colorClass: 'system',      icon: ICONS.calendar },
   faculty_inactive:     { category: 'faculty',     tagLabel: 'Faculty',     colorClass: 'warning',     icon: ICONS.alert },
   faculty_unassigned:   { category: 'faculty',     tagLabel: 'Faculty',     colorClass: 'warning',     icon: ICONS.alert },
+  password_reset_request: { category: 'faculty',   tagLabel: 'Faculty',     colorClass: 'warning',     icon: ICONS.alert },
 };
 const DEFAULT_META = { category: 'system', tagLabel: 'System', colorClass: 'system', icon: ICONS.calendar };
 
@@ -114,8 +159,13 @@ async function loadNotifications() {
 // ── Render notifications ──
 function renderNotifications() {
   list.innerHTML = '';
+  
+  const filtered = getFilteredNotifications();
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const pageNotifications = filtered.slice(startIndex, endIndex);
 
-  notifications.forEach(notif => {
+  pageNotifications.forEach(notif => {
     const meta = metaFor(notif.notif_type);
 
     const item = document.createElement('div');
@@ -149,7 +199,8 @@ function renderNotifications() {
     list.appendChild(item);
   });
 
-  applyFilters();
+  updatePagination(filtered);
+  checkEmpty();
 }
 
 // ── Notification sent date/time formatter ──
@@ -182,19 +233,8 @@ function formatNotificationDateTime(dateValue) {
 // ── Filter tabs + search act together, so switching tabs keeps a typed
 //    search and vice versa, instead of one silently overwriting the other ──
 function applyFilters() {
-  const q = searchQuery.trim().toLowerCase();
-  getItems().forEach(item => {
-    const inTab = activeFilter === 'all'    ? true :
-                  activeFilter === 'unread' ? item.classList.contains('notif-item--unread') :
-                  item.dataset.category === activeFilter;
-
-    const text = (item.querySelector('.notif-item__title')?.textContent + ' ' +
-                  item.querySelector('.notif-item__msg')?.textContent).toLowerCase();
-    const inSearch = !q || text.includes(q);
-
-    item.style.display = (inTab && inSearch) ? '' : 'none';
-  });
-  checkEmpty();
+  currentPage = 1; // Reset to first page when filters change
+  renderNotifications();
 }
 
 document.querySelectorAll('.notif-tab').forEach(tab => {
@@ -210,6 +250,27 @@ document.getElementById('notifSearch')?.addEventListener('input', function () {
   searchQuery = this.value;
   applyFilters();
 });
+
+// ── Pagination controls ──
+if (prevPageBtn) {
+  prevPageBtn.addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderNotifications();
+    }
+  });
+}
+
+if (nextPageBtn) {
+  nextPageBtn.addEventListener('click', () => {
+    const filtered = getFilteredNotifications();
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderNotifications();
+    }
+  });
+}
 
 // ── Dismiss individual (persists — deletes the notification) ──
 list.addEventListener('click', async (e) => {
@@ -232,7 +293,7 @@ list.addEventListener('click', async (e) => {
   setTimeout(() => {
     item.remove();
     syncUnreadBadge();
-    checkEmpty();
+    renderNotifications(); // Re-render to update pagination
   }, 200);
 });
 
@@ -293,7 +354,7 @@ document.getElementById('clearAllBtn')?.addEventListener('click', async () => {
   setTimeout(() => {
     list.innerHTML = '';
     syncUnreadBadge();
-    checkEmpty();
+    renderNotifications(); // Re-render to update pagination
   }, 220);
 });
 

@@ -25,7 +25,7 @@ DATASETS = {
         "label": "Faculty",
         "filename": "CCISched-Faculty.csv",
         "required": ["faculty_id", "first_name", "last_name", "webmail"],
-        "optional": ["middle initial", "age", "gender", "contact", "specialization", "academic_rank", "department", "max units", "employment type", "Avatar"],
+        "optional": ["middle initial", "age", "gender", "contact", "specialization", "academic_rank", "designation", "dept_employment_type", "department", "max units", "employment type", "Avatar"],
         "notes": ["Faculty IDs must use the FA-### format.", "Existing faculty are updated by faculty_id; new faculty are created.", "Import faculty before availability or qualification data."],
     },
     "semesters": {

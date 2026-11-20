@@ -21,13 +21,19 @@ from sqlalchemy import or_
 
 from database import db
 from models import AuditLog
-from routes.auth import login_required, role_required
+from routes.auth import current_user, login_required, role_required
+from scope import faculty_ids_in_scope
 
 audit_bp = Blueprint("audit", __name__, url_prefix="/api/audit-logs")
 
 
 def _filtered_query():
     q = AuditLog.query
+    # Department chairpersons see their own actions and their department's faculty only.
+    me = current_user()
+    allowed = faculty_ids_in_scope(me)
+    if allowed is not None:
+        q = q.filter(AuditLog.user_id.in_(allowed | {me.id}))
 
     role = request.args.get("role")
     if role in ("faculty", "chairperson"):
@@ -90,6 +96,9 @@ def audit_filters():
     cats  = [c for (c,) in db.session.query(AuditLog.category).distinct().order_by(AuditLog.category) if c]
     users = (db.session.query(AuditLog.user_id, AuditLog.user_name, AuditLog.user_role)
              .filter(AuditLog.user_id.isnot(None)).distinct().all())
+    allowed = faculty_ids_in_scope(current_user())
+    if allowed is not None:
+        users = [u for u in users if u[0] in allowed or u[0] == current_user().id]
     seen, out = set(), []
     for uid, name, role in users:
         if uid in seen:
