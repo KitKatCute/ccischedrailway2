@@ -116,6 +116,74 @@ def get_my_schedule():
     }), 200
 
 
+# ── Faculty: own teaching assignments ─────────
+@schedule_bp.get("/my-assignments")
+@login_required
+def get_my_teaching_assignments():
+    """The logged-in faculty member's sections/subjects for the active semester.
+
+    Reads their FacultyAssignment rows (approved or draft) directly AND their
+    published Schedule rows, so the Teaching Assignments page works whichever
+    of the two the chairperson has produced. A `debug` block says what exists
+    in other semesters, which is the usual reason this page looks empty.
+    """
+    user = current_user()
+    sem = _active_semester()
+    active_count = Semester.query.filter_by(is_active=True).count()
+
+    all_assign = FacultyAssignment.query.filter_by(faculty_id=user.id).all()
+    all_sched = Schedule.query.filter_by(faculty_id=user.id).all()
+    debug = {
+        "user_id": user.id,
+        "active_semester_id": sem.id if sem else None,
+        "active_semester_count": active_count,
+        "assignments_total": len(all_assign),
+        "assignments_by_semester": {},
+        "schedule_total": len(all_sched),
+        "schedule_by_semester": {},
+    }
+    for a in all_assign:
+        k = f"{a.semester_id}:{a.status}"
+        debug["assignments_by_semester"][k] = debug["assignments_by_semester"].get(k, 0) + 1
+    for e in all_sched:
+        k = str(e.semester_id)
+        debug["schedule_by_semester"][k] = debug["schedule_by_semester"].get(k, 0) + 1
+
+    if not sem:
+        return jsonify({"semester": None, "faculty": user.to_dict(),
+                        "assignments": [], "schedule": [], "debug": debug}), 200
+
+    rows = []
+    for a in (FacultyAssignment.query
+              .filter(FacultyAssignment.faculty_id == user.id,
+                      FacultyAssignment.semester_id == sem.id,
+                      FacultyAssignment.status.in_(["approved", "draft"]))
+              .all()):
+        sec = a.section
+        course = sec.course if sec else None
+        if not sec or not course:
+            continue
+        rows.append({
+            "section_name": sec.section_name,
+            "program": sec.program_code or course.program,
+            "course_code": course.course_code,
+            "course_title": course.course_title,
+            "units": course.units or 0,
+            "status": a.status,
+        })
+
+    entries = (Schedule.query.filter_by(faculty_id=user.id, semester_id=sem.id)
+               .order_by(Schedule.day, Schedule.time_start).all())
+
+    return jsonify({
+        "semester": sem.to_dict(),
+        "faculty": user.to_dict(),
+        "assignments": rows,
+        "schedule": [e.to_dict() for e in entries],
+        "debug": debug,
+    }), 200
+
+
 # ── Chairperson: any faculty's schedule ──────
 @schedule_bp.get("/<int:faculty_id>")
 @login_required

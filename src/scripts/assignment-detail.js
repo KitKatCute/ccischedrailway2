@@ -48,25 +48,27 @@ function buildSubjectRows(subjects) {
 
 async function loadTeachingAssignments() {
   try {
-    // /auth/me returns { user: {...} }, so unwrap it (falls back to the
-    // global currentUser set by auth-check.js).
-    const [assignmentData, scheduleData, meResponse] = await Promise.all([
+    // Fetch each source independently so one failing endpoint doesn't blank the page.
+    const [assignRes, schedRes, meRes] = await Promise.allSettled([
       getFacultyCourseAssignments(),
       getMySchedule(),
-      getCurrentUser().catch(() => null),
+      getCurrentUser(),
     ]);
-    const user = meResponse?.user || meResponse || (typeof currentUser !== 'undefined' ? currentUser : null);
+    const assignmentData = assignRes.status === 'fulfilled' ? assignRes.value : null;
+    const scheduleData   = schedRes.status === 'fulfilled' ? schedRes.value : null;
+    const meResponse     = meRes.status === 'fulfilled' ? meRes.value : null;
+    if (assignRes.status === 'rejected') console.warn('[Teaching Assignments] assignments failed:', assignRes.reason);
+    if (schedRes.status === 'rejected')  console.warn('[Teaching Assignments] schedule failed:', schedRes.reason);
+
+    // /auth/me returns { user: {...} }; fall back to the global set by auth-check.js
+    const user = meResponse?.user || scheduleData?.faculty || (typeof currentUser !== 'undefined' ? currentUser : null);
     const semester = assignmentData?.semester || scheduleData?.semester || null;
     const meta = setMeta(semester, user);
-    const me = assignmentData?.faculty?.find(f => Number(f.id) === Number(user?.id));
-    // Backend may return all faculty; the logged-in user is the authoritative filter.
-    const faculty = me || assignmentData?.faculty?.find(f => String(f.employee_number || '').toLowerCase() === String(user?.employee_number || '').toLowerCase());
-    if (!faculty) {
-      if (meta.sections) meta.sections.textContent = '0';
-      if (meta.subjects) meta.subjects.textContent = '0';
-      renderError('No teaching assignment data is available for the current faculty member.');
-      return;
-    }
+
+    const allFaculty = Array.isArray(assignmentData?.faculty) ? assignmentData.faculty : [];
+    const faculty = allFaculty.find(f => Number(f.id) === Number(user?.id))
+      || allFaculty.find(f => String(f.employee_number || '').toLowerCase() === String(user?.employee_number || '').toLowerCase())
+      || { courses: [], department: user?.department, program: user?.program };
 
     const schedule = Array.isArray(scheduleData?.schedule) ? scheduleData.schedule : [];
     const scheduleMap = new Map();
@@ -76,28 +78,38 @@ async function loadTeachingAssignments() {
       scheduleMap.get(key).push(row);
     });
 
+    // section name -> [subject, ...]
     const sectionMap = new Map();
-    (faculty.courses || []).forEach(course => {
-      (course.sections || []).forEach(sectionName => {
-        if (!sectionMap.has(sectionName)) sectionMap.set(sectionName, []);
-        const rows = scheduleMap.get(`${course.code}::${sectionName}`) || [];
-        const key = course.code;
-        let subj = sectionMap.get(sectionName).find(x => x.code === key);
-        if (!subj) {
-          subj = { code: course.code, name: course.name, type: 'Lecture', units: course.units || 0, schedule: [], rooms: [] };
-          sectionMap.get(sectionName).push(subj);
+    const addSubject = (sectionName, code, name, units) => {
+      if (!sectionMap.has(sectionName)) sectionMap.set(sectionName, []);
+      const list = sectionMap.get(sectionName);
+      let subj = list.find(x => x.code === code);
+      if (!subj) {
+        subj = { code, name, type: 'Lecture', units: units || 0, schedule: [], rooms: [] };
+        list.push(subj);
+      }
+      (scheduleMap.get(`${code}::${sectionName}`) || []).forEach(r => {
+        subj.type = r.class_type || subj.type;
+        if (!subj.schedule.some(x => x.day === r.day && x.start === r.time_start && x.end === r.time_end)) {
+          subj.schedule.push({ day: r.day, start: r.time_start, end: r.time_end });
         }
-        rows.forEach(r => {
-          subj.type = r.class_type || subj.type;
-          if (!subj.schedule.some(x => x.day === r.day && x.start === r.time_start && x.end === r.time_end)) subj.schedule.push({day:r.day,start:r.time_start,end:r.time_end});
-          if (r.room && !subj.rooms.includes(r.room)) subj.rooms.push(r.room);
-        });
+        if (r.room && !subj.rooms.includes(r.room)) subj.rooms.push(r.room);
       });
+    };
+
+    // 1) Official course assignments (approved/draft)
+    (faculty.courses || []).forEach(course => {
+      (course.sections || []).forEach(sectionName => addSubject(sectionName, course.code, course.name, course.units));
     });
+    // 2) Published timetable rows — covers anything not in the assignments table
+    schedule.forEach(row => addSubject(row.section_name, row.course_code, row.course_title, row.units));
 
     const sections = Array.from(sectionMap.entries());
+    const subjectCodes = new Set();
+    sections.forEach(([, subs]) => subs.forEach(sub => subjectCodes.add(sub.code)));
     if (meta.sections) meta.sections.textContent = sections.length;
-    if (meta.subjects) meta.subjects.textContent = (faculty.courses || []).length;
+    if (meta.subjects) meta.subjects.textContent = subjectCodes.size;
+
     const container = document.getElementById('taSections');
     if (!container) return;
     if (!sections.length) {

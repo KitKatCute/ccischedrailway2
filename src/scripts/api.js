@@ -265,6 +265,10 @@ async function getMySchedule() {
   return apiFetch("/schedule");
 }
 
+async function getMyTeachingAssignments() {
+  return apiFetch("/schedule/my-assignments");
+}
+
 async function getFacultyLoads() {
   return apiFetch("/schedule/loads");
 }
@@ -483,6 +487,7 @@ const API = {
   clearAllNotifications,
   // Schedule
   getMySchedule,
+  getMyTeachingAssignments,
   getFacultyLoads,
   getFacultySchedule,
   publishSchedule,
