@@ -1,0 +1,5 @@
+chairperson_id,first_name,middle_name,last_name,webmail,gender,age,department,contact_number
+CP-000,John Dustin,D.,Santos,johndustin@pup.edu.ph,Male,,Department of Information Technology,+63 067 143 8700
+CP-001,Marian,G.,Arada,marian@pup.edu.ph,Female,,Department of Computer Science,
+CPDEMO-000,IT CHAIRPERSON,,DEMO,cpdemo.it@pup.edu.ph,,,Department of Information Technology,
+CPDEMO-001,CS CHAIRPERSON,,DEMO,cpdemo.cs@pup.edu.ph,,,Department of Computer Science,

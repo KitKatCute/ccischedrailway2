@@ -1,0 +1,58 @@
+faculty_id,last_name,first_name,middle initial,gender,department,academic rank,designation ,max units,employment type,dept_employment_type,Avatar,specialization,webmail
+FA-000,Aguila,Fermin ,S,Male,Department of Information Technology,Instructor,,15,Permanent,Permanent IT,FA,Data Mining,asfermin@pup.edu.ph
+FA-001,Amata,Maria Leonila,C,Female,Department of Information Technology,Instructor,,15,Permanent,Permanent IT,MA,Integrated Software Application,acmarialeonila@pup.edu.ph
+FA-002,Canlas,Rosita ,E,Female,Department of Information Technology,Professor,AVP for Designation,3,Permanent,Permanent IT Designee,RC,Quantitative Methods with Modeling and Simulation,cerosita@pup.edu.ph
+FA-003,Comendador,Benilda Eleonor,V,Female,Department of Information Technology,Professor,"HAP, OU-IODE",6,Permanent,Permanent IT Designee,BC,Technical Documentation and Presentation Skills in ICT,cvbenildaeleonor@pup.edu.ph
+FA-004,Domingo ,Iluminada Vivien ,R,Female,Department of Information Technology,Instructor,,15,Permanent,Permanent IT,ID,Introduction to Database Management System,driluminadavivien@pup.edu.ph
+FA-005,Espineli,Juancho,D,Male,Department of Information Technology,Assisstand Professor,,15,Permanent,Permanent IT Designee,JE,Applications Development and Emerging Technologies,edjuancho@pup.edu.ph
+FA-006,Mandigma ,Jonnifer,C,Male,Department of Information Technology,Instructor,,15,Permanent,Permanent IT,JM,CS Thesis Writing 2,mcjonnifer@pup.edu.ph
+FA-007,Miclat,Segundina,Y,Female,Department of Information Technology,Associate Professor,QA and OJT Coordinator,9,Permanent,Permanent IT Designee,SM,Switching and Wireless Network Configuration,mysegundina@pup.edu.ph
+FA-008,Munsayac,Joel,M,Male,Department of Information Technology,Professor,"Section Chief, HRMD",6,Permanent,Permanent IT Designee,JM,Technical Documentation and Presentation Skills in ICT,mmjoel@pup.edu.ph
+FA-009,Nayre,Rachel,A,Female,Department of Information Technology,Associate Professor,,15,Permanent,Permanent IT Designee,RM,Capstone Project 2,narachel@pup.edu.ph
+FA-010,Reyes,Maria Esperanza,H,Female,Department of Information Technology,Assistant Professor,"Chief, DMCS-IQMSO",6,Permanent,Permanent IT Designee,MR,Quantitative Methods with Modeling and Simulation,rhmariaesperanza@pup.edu.ph
+FA-011,Sagum ,Janelle Kyra ,A,Female,Department of Information Technology,Assistant Professor,Research and Extension Coordinator,9,Permanent,Permanent IT Designee,JS,Data Mining,sajanellekyra@pup.edu.ph
+FA-012,Santos ,John Dustin,D,Male,Department of Information Technology,Instructor,"Chairperson, DIT ",6,Permanent,Permanent IT Designee,JD,Human Computer Interaction,sdjohndustin@pup.edu.ph
+FA-013,Mayor,Jayson James,M,Male,Department of Information Technology,Instructor,"Education Technology Specialist, UTLDO ",6,Temporary,Temporary IT Designee,JJ,Programming 3 (Structured Programming),mmjaysonjames@pup.edu.ph
+FA-014,Arcinas,Enrico,D,Male,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,EA,Switching and Wireless Network Configuration,adenrico@pup.edu.ph
+FA-015,Bedis,Severino Jr.,M,Male,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,SB,Programming 3 (Structured Programming),bmseverinojr@pup.edu.ph
+FA-016,Cayabyab,Desiderata,B,Female,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,DC,Systems Administration and Maintenance,cbdesiderata@pup.edu.ph
+FA-017,Escueta,Niño Danielle,D,Male,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,NE,Data Mining,edniodanielle@pup.edu.ph
+FA-018,Esparrago,Yuzef Ezeckiel,D,Male,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,YE,Information Assurance and Security1,edyuzefezeckiel@pup.edu.ph
+FA-019,Fabregas,Arnie,,Male,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,AF,Fundamentals of Computer Programming,farnie@pup.edu.ph
+FA-020,Garcia,Flordeliz,C,Female,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,FG,Information Management,gcflordeliz@pup.edu.ph
+FA-021,Lastimosa,Sancho Glenn,A,Male,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,SL,Quality Assurance,lasanchoglenn@pup.edu.ph
+FA-022,Libunao,Alexis ,A,Female,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,AL,Operating Systems,laalexis@pup.edu.ph
+FA-023,Lim ,Roberto,O,Male,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,RL,Information Assurance and Security 2,loroberto@pup.edu.ph
+FA-024,Lingad,Jazarene,B,Female,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,JL,Principles of Programming Languages,lbjazarene@pup.edu.ph
+FA-025,Luna,Antonio ,T,Male,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,AL,Network and Enterprise Protection,ltantonio@pup.edu.ph
+FA-026,Sales,Angela,L,Female,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,AS,Design and Analysis of Algorithms,slangela@pup.edu.ph
+FA-027,San Luis ,Angelo Joshua,B,Male,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,AJ,Systems Integration and Architecture 1,sbangelojoshua@pup.edu.ph
+FA-028,Tuason,Shena,M,Female,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,ST,Information Assurance and Security 2,tmshena@pup.edu.ph
+FA-029,Untalan,Kevin Paul,P,Male,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,KU,Introduction to Computing,upkevinpaul@pup.edu.ph
+FA-030,Violeta,Mariel Leo,T,Male,Department of Information Technology,Instructor,,12,Part-Time,Part-Time IT,MV,Systems Administration and Maintenance,vtmarielleo@pup.edu.ph
+FA-031,Arada,Marian,G,Female,Department of Computer Science,Instructor,"Chairperson, DCS ",6,Permanent,Permanent CS Designee,MA,Software Engineering 2,agmarian@pup.edu.ph
+FA-032,Barretto,Monina,D,Female,Department of Computer Science,Instructor,Faculty Club President,9,Permanent,Permanent CS Designee,MB,Technical Documentation and Presentation Skills in ICT,bdmonina@pup.edu.ph
+FA-033,Basista,Leoven,R,Male,Department of Computer Science,Instructor,,15,Permanent,Permanent CS,LB,Machine Learning,brleoven@pup.edu.ph
+FA-034,Dastas,Lydinar ,D,Female,Department of Computer Science,Instructor,"Program Chair, PBDIT",6,Permanent,Permanent CS Designee,LD,Data Mining,ddlydinar@pup.edu.ph
+FA-035,Fabregas,Aleta,C,Female,Department of Computer Science,Instructor,"Chief, CMCISR-ISTR",6,Permanent,Permanent CS Designee,AF,Information Management,fcaleta@pup.edu.ph
+FA-036,Inovero,Carlo,G,Male,Department of Computer Science,Instructor,"Chief, RMS-IQMSO",6,Permanent,Permanent CS Designee,CI,Project Management,igcarlo@pup.edu.ph
+FA-037,Molejon,Montaigne,G,Male,Department of Computer Science,Instructor,,15,Permanent,Permanent CS,MM,Machine Learning,mgmontaigne@pup.edu.ph
+FA-038,Roxas,Melvin,C,Male,Department of Computer Science,Instructor,Dean,3,Permanent,Permanent CS Designee,MR,Logic Design and Digital Computer Circuits,rcmelvin@pup.edu.ph
+FA-039,Sagum ,Ria,A,Female,Department of Computer Science,Instructor,,15,Permanent,Permanent CS,RS,Cybersecurity Fundamentals,saria@pup.edu.ph
+FA-040,Usero,Sherilyn,B,Female,Department of Computer Science,Instructor,,15,Permanent,Permanent CS,SU,Computer Programming 2,ubsherilyn@pup.edu.ph
+FA-041,Bato,Eugene Andrew,S,Male,Department of Computer Science,Instructor,,12,Part-Time,Part-Time CS,EB,Living in the IT Era,bseugeneandrew@pup.edu.ph
+FA-042,Cadaoas,Renz Angelo,D,Male,Department of Computer Science,Instructor,,12,Part-Time,Part-Time CS,RC,Capstone Project 1,cdrenzangelo@pup.edu.ph
+FA-043,Canlas,Arlene,B,Male,Department of Computer Science,Instructor,,12,Part-Time,Part-Time CS,AC,Wide Area Network,cbarlene@pup.edu.ph
+FA-044,Del Valle,Edward Louis,D,Male,Department of Computer Science,Instructor,,15,Part-Time,Part-Time CS,ED,Human Computer Interaction,ddedwardlouis@pup.edu.ph
+FA-045,Frias,Dale Anthony ,N,Male,Department of Computer Science,Instructor,,12,Part-Time,Part-Time CS,DF,Project Management,fndaleanthony@pup.edu.ph
+FA-046,Marbella,Cecilia,V,Female,Department of Computer Science,Instructor,,12,Part-Time,Part-Time CS,CM,Computer Organization and Assembly Language,mvcecilia@pup.edu.ph
+FA-047,Mendoza,Norberto,R,Male,Department of Computer Science,Instructor,,12,Part-Time,Part-Time CS,NM,Software Engineering 1,mrnorberto@pup.edu.ph
+FA-048,Montaril,Ranil,M,Male,Department of Computer Science,Instructor,,12,Part-Time,Part-Time CS,RM,Project Management,mmranil@pup.edu.ph
+FA-049,Obsanga,Aldrin,P,Male,Department of Computer Science,Instructor,,12,Part-Time,Part-Time CS,AO,Software Engineering 1,opaldrin@pup.edu.ph
+FA-050,Piamonte,Chris Nicole,P,Male,Department of Computer Science,Instructor,,12,Part-Time,Part-Time CS,CP,Software Engineering 2,ppchrisnicole@pup.edu.ph
+FA-051,Salaya,Ma. Angela,M,Female,Department of Computer Science,Instructor,,12,Part-Time,Part-Time CS,MA,Multimedia,smmaangela@pup.edu.ph
+FA-052,Sarmiento,Marygin,E,Female,Department of Computer Science,Instructor,,12,Part-Time,Part-Time CS,MS,Software Engineering 2,semarygin@pup.edu.ph
+FA-053,Sisor,Caren,C,Female,Department of Computer Science,Instructor,,12,Part-Time,Part-Time CS,CS,Project Management,sccaren@pup.edu.ph
+FA-054,Villarez,Rodel,,Male,Department of Computer Science,Instructor,,12,Part-Time,Part-Time CS,RV,Fundamentals of Computer Programming,vrodel@pup.edu.ph
+FADEMO-000,DEMO,IT FACULTY,,,Department of Information Technology,Instructor,,15,Permanent,Permanent IT,ID,,fademo.it@pup.edu.ph
+FADEMO-001,DEMO,CS FACULTY,,,Department of Computer Science,Instructor,,15,Permanent,Permanent CS,CD,,fademo.cs@pup.edu.ph

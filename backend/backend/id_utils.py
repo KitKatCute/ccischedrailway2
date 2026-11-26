@@ -17,5 +17,10 @@ def fa_to_id(code: str) -> int:
     code = str(code).strip()
     match = re.search(r"(\d+)", code)
     if match:
-        return int(match.group(1)) + 1
+        if re.fullmatch(r"FA-\d+", code, flags=re.IGNORECASE):
+            return int(match.group(1)) + 1
+        # Non-FA-### codes (e.g. demo accounts "FADEMO-000") get their own
+        # range so they can't collide with real faculty ids (FADEMO-000 would
+        # otherwise map to 1 and overwrite FA-000).
+        return int(match.group(1)) + 1000
     return abs(hash(code)) % 100000 + 100000   # unlikely fallback, kept safe/high
