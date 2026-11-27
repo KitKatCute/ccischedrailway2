@@ -43,7 +43,9 @@ from models import (
     User, Semester, Course, Room, Section,
     ProgramCurriculum, FacultyCourseQualification,
     AvailabilitySubmission, AvailabilitySlot, AvailabilityHistory,
+    PreferredCourseSubmission, PreferredCourse,
 )
+from scope import course_allowed_for_faculty
 
 DATA_DIR = Path(__file__).parent / "data"
 
@@ -649,6 +651,89 @@ def seed_faculty_qualifications(app):
 
 
 # ─────────────────────────────────────────────────────────────
+#  MOCK PREFERRED COURSE SUBMISSIONS (for the "Preferred Courses" page)
+# ─────────────────────────────────────────────────────────────
+def seed_mock_preferred_courses(app):
+    """
+    Gives every real faculty member a submitted "Preferred Courses" list for
+    the active semester so the chairperson views have data to show.
+
+    Rules:
+      * Demo accounts (employee number starting with "DEMO-") are skipped, so
+        you can still try the submit flow yourself on them.
+      * IT faculty only get IT + general courses; CS faculty only get CS +
+        general courses (same rule the Add Course dropdown enforces).
+      * The list is built from each faculty's qualified courses (the
+        qualifications CSV) first, then topped up from the allowed pool.
+      * Never overwrites a real submission: faculty who already have one for
+        the active semester are left alone, so re-running init_db is safe.
+      * Deterministic (seeded by faculty id) so the data is the same every run.
+    """
+    import random
+
+    with app.app_context():
+        sem = Semester.query.filter_by(is_active=True).first()
+        if not sem:
+            print("  [warn] No active semester — skipping mock preferred courses.")
+            return
+
+        courses = Course.query.filter_by(is_active=True).order_by(Course.course_code).all()
+        created = skipped_existing = 0
+
+        faculty_rows = (User.query.filter_by(role="faculty")
+                        .order_by(User.id).all())
+        for fac in faculty_rows:
+            if (fac.employee_number or "").upper().startswith("DEMO-"):
+                continue
+            if PreferredCourseSubmission.query.filter_by(
+                    faculty_id=fac.id, semester_id=sem.id).first():
+                skipped_existing += 1
+                continue
+
+            allowed = [c for c in courses if course_allowed_for_faculty(fac, c)]
+            if not allowed:
+                continue
+            allowed_ids = {c.id for c in allowed}
+
+            rng = random.Random(fac.id)
+            target = rng.randint(5, 8)
+
+            # Start from what they're already qualified to teach (in rank order)
+            quals = (FacultyCourseQualification.query
+                     .filter_by(faculty_id=fac.id)
+                     .order_by(FacultyCourseQualification.preference_rank).all())
+            qualified = [q.course_id for q in quals if q.course_id in allowed_ids]
+            rng.shuffle(qualified)
+            picks = qualified[:target]
+
+            # Top up from the rest of the allowed pool if they're short
+            if len(picks) < target:
+                rest = [c.id for c in allowed if c.id not in picks]
+                rng.shuffle(rest)
+                picks += rest[: target - len(picks)]
+
+            if not picks:
+                continue
+
+            submitted_at = datetime.now(timezone.utc) - timedelta(
+                days=rng.randint(1, 14), hours=rng.randint(0, 23))
+            sub = PreferredCourseSubmission(
+                faculty_id=fac.id, semester_id=sem.id,
+                status="submitted", submitted_at=submitted_at,
+            )
+            db.session.add(sub)
+            db.session.flush()
+            for rank, cid in enumerate(picks, start=1):
+                db.session.add(PreferredCourse(
+                    submission_id=sub.id, course_id=cid, preference_rank=rank))
+            created += 1
+
+        db.session.commit()
+        print(f"  [ok] Mock preferred courses: {created} submissions created"
+              + (f", {skipped_existing} already existed." if skipped_existing else "."))
+
+
+# ─────────────────────────────────────────────────────────────
 #  FACULTY AVAILABILITY
 # ─────────────────────────────────────────────────────────────
 def _hhmm(raw: str) -> str:
@@ -916,6 +1001,7 @@ def main():
     seed_sections_from_cohorts(app)
     seed_users(app)
     seed_faculty_qualifications(app)
+    seed_mock_preferred_courses(app)
     seed_faculty_availability(app)
     seed_chairpersons(app)
     seed_demo_accounts(app)

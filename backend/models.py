@@ -612,6 +612,70 @@ class Notification(db.Model):
 #  no session) for the chairperson to reset it. The chairperson resets it
 #  from the Faculty page, which issues a one-time temporary password.
 # ─────────────────────────────────────────────────────────────
+class PreferredCourseSubmission(db.Model):
+    __tablename__ = "preferred_course_submissions"
+
+    id          = db.Column(db.Integer, primary_key=True)
+    faculty_id  = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    semester_id = db.Column(db.Integer, db.ForeignKey("semesters.id"), nullable=False)
+    status      = db.Column(db.String(20), default="pending")  # pending, submitted, approved, rejected
+    submitted_at = db.Column(db.DateTime)
+    created_at  = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at  = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
+                            onupdate=lambda: datetime.now(timezone.utc))
+
+    faculty  = db.relationship("User")
+    semester = db.relationship("Semester")
+
+    __table_args__ = (
+        db.UniqueConstraint("faculty_id", "semester_id", name="uq_preferred_faculty_semester"),
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            "id":          self.id,
+            "faculty_id":  self.faculty_id,
+            "semester_id": self.semester_id,
+            "status":      self.status,
+            "submitted_at": self.submitted_at.isoformat() if self.submitted_at else None,
+            "created_at":  self.created_at.isoformat() if self.created_at else None,
+            "updated_at":  self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+# ─────────────────────────────────────────────────────────────
+#  PREFERRED COURSE (submission-specific)
+#  Individual course preferences within a submission - analogous
+#  to AvailabilitySlot. Does NOT touch FacultyCourseQualification
+#  which is scheduler infrastructure.
+# ─────────────────────────────────────────────────────────────
+class PreferredCourse(db.Model):
+    __tablename__ = "preferred_courses"
+
+    id              = db.Column(db.Integer, primary_key=True)
+    submission_id   = db.Column(db.Integer, db.ForeignKey("preferred_course_submissions.id"), nullable=False)
+    course_id       = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False)
+    preference_rank = db.Column(db.Integer, default=1)  # 1 = most preferred
+
+    submission = db.relationship("PreferredCourseSubmission", backref="courses")
+    course     = db.relationship("Course")
+
+    def to_dict(self) -> dict:
+        return {
+            "id":              self.id,
+            "submission_id":   self.submission_id,
+            "course_id":       self.course_id,
+            "course_code":     self.course.course_code if self.course else None,
+            "preference_rank": self.preference_rank,
+        }
+
+
+# ─────────────────────────────────────────────────────────────
+#  PASSWORD RESET REQUESTS
+#  A faculty member who forgot their password asks (from the login page,
+#  no session) for the chairperson to reset it. The chairperson resets it
+#  from the Faculty page, which issues a one-time temporary password.
+# ─────────────────────────────────────────────────────────────
 class PasswordResetRequest(db.Model):
     __tablename__ = "password_reset_requests"
 

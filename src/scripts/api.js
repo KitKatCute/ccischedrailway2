@@ -176,6 +176,35 @@ async function deleteSlot(slotId) {
 }
 
 // ─────────────────────────────────────────────
+//  PREFERRED COURSES (Faculty)
+// ─────────────────────────────────────────────
+async function getMyPreferredCourses() {
+  return apiFetch("/preferred-courses");
+}
+
+async function savePreferredCourses(courses) {
+  return apiFetch("/preferred-courses", {
+    method: "POST",
+    body: JSON.stringify({ courses }),
+  });
+}
+
+async function finalizePreferredCourses() {
+  return apiFetch("/preferred-courses/finalize", { method: "POST" });
+}
+
+// ─────────────────────────────────────────────
+//  PREFERRED COURSES (Chairperson)
+// ─────────────────────────────────────────────
+async function getAllPreferredCoursesSubmissions() {
+  return apiFetch("/preferred-courses/all");
+}
+
+async function deletePreferredCoursesSubmission(submissionId) {
+  return apiFetch(`/preferred-courses/${submissionId}`, { method: "DELETE" });
+}
+
+// ─────────────────────────────────────────────
 //  AVAILABILITY (Chairperson)
 // ─────────────────────────────────────────────
 async function getAllSubmissions() {
@@ -474,6 +503,12 @@ const API = {
   getAllSubmissions,
   getSubmission,
   deleteSubmission,
+  // Preferred Courses
+  getMyPreferredCourses,
+  savePreferredCourses,
+  finalizePreferredCourses,
+  getAllPreferredCoursesSubmissions,
+  deletePreferredCoursesSubmission,
   // Review
   approveSubmission,
   rejectSubmission,

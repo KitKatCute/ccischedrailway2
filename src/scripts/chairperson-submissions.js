@@ -1,5 +1,8 @@
 'use strict';
 
+// ── Current active tab ──
+let activeTab = 'availability'; // 'availability' or 'preferredCourses'
+
 // ── Topbar date ──
 const topbarDate = document.getElementById('topbarDate');
 if (topbarDate) {
@@ -14,38 +17,110 @@ document.getElementById('notifBtn')?.addEventListener('click', () => {
 });
 
 // ─────────────────────────────────────────────
+//  TAB SWITCHING
+// ─────────────────────────────────────────────
+document.getElementById('availabilityTab')?.addEventListener('click', () => {
+  activeTab = 'availability';
+  updateActiveTab();
+  loadSubmissions();
+});
+
+document.getElementById('preferredCoursesTab')?.addEventListener('click', () => {
+  activeTab = 'preferredCourses';
+  updateActiveTab();
+  loadSubmissions();
+});
+
+function updateActiveTab() {
+  document.querySelectorAll('.submission-tab').forEach(tab => {
+    tab.classList.remove('submission-tab--active');
+  });
+  
+  if (activeTab === 'availability') {
+    document.getElementById('availabilityTab')?.classList.add('submission-tab--active');
+  } else {
+    document.getElementById('preferredCoursesTab')?.classList.add('submission-tab--active');
+  }
+}
+
+// ─────────────────────────────────────────────
 //  DATA — loaded from the real backend
 // ─────────────────────────────────────────────
 let facultySubmissions = [];
 
 async function loadSubmissions() {
   try {
-    const [subsResult, faculty] = await Promise.all([
-      API.getAllSubmissions(),
-      API.getFacultyList().catch(() => []),
-    ]);
-
+    const faculty = await API.getFacultyList().catch(() => []);
     const typeByFacultyId = {};
     faculty.forEach(f => { typeByFacultyId[f.id] = f.employment_type || 'Full Time'; });
 
-    facultySubmissions = (subsResult.submissions || []).map(s => ({
-      id:            s.id,
-      faculty_id:    s.faculty_id,
-      faculty_name:  s.faculty_name || 'Unknown',
-      type:          typeByFacultyId[s.faculty_id] || 'Faculty',
-      status:        s.status,
-      submittedDate: s.submitted_at
-        ? new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-        : null,
-      submittedAtRaw: s.submitted_at,
-      // Same grouping the detail page uses, so the two always agree
-      slotCount:     AvailabilityUtils.buildSlotCards(s.slots || [], { merge: true }).length,
-    }));
+    if (activeTab === 'availability') {
+      // Load availability submissions
+      const subsResult = await API.getAllSubmissions();
+      facultySubmissions = (subsResult.submissions || []).map(s => ({
+        id:            s.id,
+        faculty_id:    s.faculty_id,
+        faculty_name:  s.faculty_name || 'Unknown',
+        type:          typeByFacultyId[s.faculty_id] || 'Faculty',
+        status:        s.status,
+        submittedDate: s.submitted_at
+          ? new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          : null,
+        submittedAtRaw: s.submitted_at,
+        slotCount:     AvailabilityUtils.buildSlotCards(s.slots || [], { merge: true }).length,
+        courses:       [],
+      }));
+    } else {
+      // Load preferred courses submissions
+      const coursesResult = await API.getAllPreferredCoursesSubmissions();
+      facultySubmissions = (coursesResult.submissions || []).map(s => ({
+        id:            s.id,
+        faculty_id:    s.faculty_id,
+        faculty_name:  s.faculty_name || 'Unknown',
+        type:          typeByFacultyId[s.faculty_id] || 'Faculty',
+        status:        s.status,
+        submittedDate: s.submitted_at
+          ? new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          : null,
+        submittedAtRaw: s.submitted_at,
+        slotCount:     0,
+        courses:       s.courses || [],
+      }));
+    }
 
+    renderColumnHeaders();
     renderStats();
     renderTable(activeFilter, searchQuery, sortBy);
   } catch (err) {
     console.error('[Submissions] Failed to load:', err);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  COLUMN HEADERS (dynamic based on tab)
+// ─────────────────────────────────────────────
+function renderColumnHeaders() {
+  const el = document.getElementById('csColHeaders');
+  if (!el) return;
+
+  if (activeTab === 'availability') {
+    el.innerHTML = `
+      <span class="cs-col cs-col--name">FACULTY NAME</span>
+      <span class="cs-col cs-col--type">TYPE</span>
+      <span class="cs-col cs-col--slots">SLOTS</span>
+      <span class="cs-col cs-col--status">STATUS</span>
+      <span class="cs-col cs-col--date">SUBMITTED</span>
+      <span class="cs-col cs-col--actions">ACTIONS</span>
+    `;
+  } else {
+    el.innerHTML = `
+      <span class="cs-col cs-col--name">FACULTY NAME</span>
+      <span class="cs-col cs-col--type">TYPE</span>
+      <span class="cs-col cs-col--slots">COURSES</span>
+      <span class="cs-col cs-col--status">STATUS</span>
+      <span class="cs-col cs-col--date">SUBMITTED</span>
+      <span class="cs-col cs-col--actions">ACTIONS</span>
+    `;
   }
 }
 
@@ -186,7 +261,12 @@ function renderTable(filter = 'all', query = '', sort = 'name') {
 
   body.querySelectorAll('[data-view]').forEach(btn => {
     btn.addEventListener('click', () => {
-      window.location.href = `submission-detail.html?id=${btn.dataset.view}`;
+      const submissionId = parseInt(btn.dataset.view);
+      if (activeTab === 'preferredCourses') {
+        viewPreferredCourses(submissionId);
+      } else {
+        window.location.href = `submission-detail.html?id=${submissionId}`;
+      }
     });
   });
 
@@ -308,7 +388,12 @@ function renderTableCurrentPage() {
 
   body.querySelectorAll('[data-view]').forEach(btn => {
     btn.addEventListener('click', () => {
-      window.location.href = `submission-detail.html?id=${btn.dataset.view}`;
+      const submissionId = parseInt(btn.dataset.view);
+      if (activeTab === 'preferredCourses') {
+        viewPreferredCourses(submissionId);
+      } else {
+        window.location.href = `submission-detail.html?id=${submissionId}`;
+      }
     });
   });
 
@@ -394,3 +479,134 @@ function showToast(msg) {
 //  INIT
 // ─────────────────────────────────────────────
 loadSubmissions();
+
+
+// ─────────────────────────────────────────────
+//  PREFERRED COURSES MODAL
+// ─────────────────────────────────────────────
+let currentPreferredSubmission = null;
+let allCoursesCache = null;
+
+async function viewPreferredCourses(submissionId) {
+  const submission = facultySubmissions.find(s => s.id === submissionId);
+  if (!submission) return;
+
+  currentPreferredSubmission = submission;
+  
+  // Load all courses to get titles (cache for performance)
+  if (!allCoursesCache) {
+    allCoursesCache = await API.getCourses().catch(() => []);
+  }
+  
+  const courseMap = {};
+  allCoursesCache.forEach(c => { courseMap[c.id] = c; });
+
+  // Show modal
+  const modal = document.getElementById('preferredCoursesModal');
+  const modalName = document.getElementById('modalFacultyName');
+  const modalList = document.getElementById('modalCoursesList');
+  
+  modalName.textContent = `${submission.faculty_name} - Preferred Courses`;
+  
+  if (!submission.courses || submission.courses.length === 0) {
+    modalList.innerHTML = '<p style="text-align: center; color: #999; padding: 2rem; background: #f9f9f9; border-radius: 6px; border: 1px dashed #ddd;">No courses submitted yet.</p>';
+  } else {
+    const sorted = [...submission.courses].sort((a, b) => a.preference_rank - b.preference_rank);
+    modalList.innerHTML = sorted.map((item, index) => {
+      const course = courseMap[item.course_id];
+      const courseCode = item.course_code || course?.code || 'N/A';
+      const courseTitle = course?.title || 'Unknown Course';
+      
+      return `
+        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; background: #fff; border-radius: 8px; border: 1.5px solid #e0e0e0; transition: box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+          <div style="display: flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; background: #800000; color: white; border-radius: 50%; font-weight: 700; font-size: 1rem; flex-shrink: 0;">
+            ${index + 1}
+          </div>
+          <div style="flex: 1; min-width: 0;">
+            <p style="font-weight: 600; font-size: 0.95rem; color: #333; margin: 0 0 0.25rem 0;">${courseCode}</p>
+            <p style="font-size: 0.85rem; color: #666; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${courseTitle}</p>
+          </div>
+          <div style="text-align: right; padding: 0.5rem 0.75rem; background: #f5f5f5; border-radius: 6px; border: 1px solid #ddd;">
+            <p style="font-size: 0.7rem; color: #999; margin: 0 0 0.15rem 0; text-transform: uppercase; letter-spacing: 0.5px;">Rank</p>
+            <p style="font-size: 1rem; font-weight: 700; color: #800000; margin: 0;">#${item.preference_rank}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  
+  // Update button states based on current status
+  const approveBtn = document.getElementById('approvePreferredBtn');
+  const rejectBtn = document.getElementById('rejectPreferredBtn');
+  
+  if (submission.status === 'approved') {
+    approveBtn.disabled = true;
+    approveBtn.style.opacity = '0.5';
+    approveBtn.style.cursor = 'not-allowed';
+    approveBtn.title = 'Already approved';
+  } else {
+    approveBtn.disabled = false;
+    approveBtn.style.opacity = '1';
+    approveBtn.style.cursor = 'pointer';
+    approveBtn.title = '';
+  }
+  
+  if (submission.status === 'rejected') {
+    rejectBtn.disabled = true;
+    rejectBtn.style.opacity = '0.5';
+    rejectBtn.style.cursor = 'not-allowed';
+    rejectBtn.title = 'Already rejected';
+  } else {
+    rejectBtn.disabled = false;
+    rejectBtn.style.opacity = '1';
+    rejectBtn.style.cursor = 'pointer';
+    rejectBtn.title = '';
+  }
+  
+  modal.style.display = 'flex';
+}
+
+function closePreferredCoursesModal() {
+  document.getElementById('preferredCoursesModal').style.display = 'none';
+  currentPreferredSubmission = null;
+}
+
+async function approvePreferredCourses() {
+  if (!currentPreferredSubmission) return;
+  if (currentPreferredSubmission.status === 'approved') return;
+  
+  if (!confirm(`Approve ${currentPreferredSubmission.faculty_name}'s preferred courses?`)) return;
+  
+  try {
+    await API.updatePreferredCoursesStatus(currentPreferredSubmission.id, 'approved');
+    alert('✓ Preferred courses approved successfully!');
+    closePreferredCoursesModal();
+    loadSubmissions(); // Reload the list
+  } catch (err) {
+    console.error('Failed to approve:', err);
+    alert(err.message || 'Failed to approve. Please try again.');
+  }
+}
+
+async function rejectPreferredCourses() {
+  if (!currentPreferredSubmission) return;
+  if (currentPreferredSubmission.status === 'rejected') return;
+  
+  if (!confirm(`Reject ${currentPreferredSubmission.faculty_name}'s preferred courses?`)) return;
+  
+  try {
+    await API.updatePreferredCoursesStatus(currentPreferredSubmission.id, 'rejected');
+    alert('✗ Preferred courses rejected.');
+    closePreferredCoursesModal();
+    loadSubmissions(); // Reload the list
+  } catch (err) {
+    console.error('Failed to reject:', err);
+    alert(err.message || 'Failed to reject. Please try again.');
+  }
+}
+
+// Make functions global for onclick handlers
+window.viewPreferredCourses = viewPreferredCourses;
+window.closePreferredCoursesModal = closePreferredCoursesModal;
+window.approvePreferredCourses = approvePreferredCourses;
+window.rejectPreferredCourses = rejectPreferredCourses;

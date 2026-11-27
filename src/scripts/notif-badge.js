@@ -14,7 +14,7 @@
 
 async function refreshNotifBadge() {
   const badges = document.querySelectorAll('.notif-badge');
-  if (!badges.length) return;
+  const navLinks = document.querySelectorAll('.sidebar__link[href$="notifications.html"]');
 
   let count = 0;
   try {
@@ -26,8 +26,29 @@ async function refreshNotifBadge() {
   }
 
   badges.forEach(badge => {
-    badge.textContent = count;
+    badge.textContent = count > 99 ? '99+' : String(count);
     badge.style.display = count > 0 ? '' : 'none';
+  });
+
+  // Highlight the sidebar destination for every signed-in role/page.
+  navLinks.forEach(link => {
+    link.classList.toggle('sidebar__link--has-unread', count > 0);
+    link.setAttribute('aria-label', count > 0
+      ? `Notifications, ${count} unread`
+      : 'Notifications');
+
+    let indicator = link.querySelector('.notif-nav-indicator');
+    if (count > 0) {
+      if (!indicator) {
+        indicator = document.createElement('span');
+        indicator.className = 'notif-nav-indicator';
+        indicator.setAttribute('aria-hidden', 'true');
+        link.appendChild(indicator);
+      }
+      indicator.textContent = count > 99 ? '99+' : String(count);
+    } else if (indicator) {
+      indicator.remove();
+    }
   });
 }
 

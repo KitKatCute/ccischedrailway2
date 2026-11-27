@@ -25,18 +25,28 @@ try {
   if (raw) _apiResult = JSON.parse(raw);
 } catch (_) { /* ignore */ }
 
-const ASSIGNMENTS = _apiResult?.dept_summary ?? [
-  {
-    department: 'Bachelor of Science in Computer Science',
-    totalFaculty: 0,
-    status: 'Completed',
-  },
-  {
-    department: 'Bachelor of Science in Information Technology',
-    totalFaculty: 0,
-    status: 'Completed',
-  },
-];
+const ASSIGNMENTS = Array.isArray(_apiResult?.dept_summary)
+  ? _apiResult.dept_summary
+  : [];
+
+function getAssignedCount(code) {
+  const detail = _apiResult?.dept_detail || {};
+  const key = code === 'BSCS' ? '0' : '1';
+  const faculty = detail[key]?.faculty;
+  if (Array.isArray(faculty)) return faculty.length;
+  const summary = ASSIGNMENTS.find(item =>
+    String(item.department || '').toLowerCase().includes(code === 'BSCS' ? 'computer science' : 'information technology')
+  );
+  return Number(summary?.totalFaculty || 0);
+}
+
+function updateDepartmentStats() {
+  const bscs = document.getElementById('bscsStatus');
+  const bsit = document.getElementById('bsitStatus');
+  if (bscs) bscs.textContent = `${getAssignedCount('BSCS')} FACULTY ASSIGNED`;
+  if (bsit) bsit.textContent = `${getAssignedCount('BSIT')} FACULTY ASSIGNED`;
+}
+
 
 // ─────────────────────────────────────────────
 //  RENDER TABLE ROWS
@@ -47,13 +57,21 @@ function renderRows() {
   if (!gaBody) return;
   gaBody.innerHTML = '';
 
+  if (!ASSIGNMENTS.length) {
+    const row = document.createElement('div');
+    row.className = 'ga-row';
+    row.innerHTML = '<span class="ga-row__dept" style="grid-column:1/-1">No assignment summary was returned. Please generate assignments again.</span>';
+    gaBody.appendChild(row);
+    return;
+  }
+
   ASSIGNMENTS.forEach((item, idx) => {
     const row = document.createElement('div');
     row.className = 'ga-row';
     row.innerHTML = `
       <span class="ga-row__dept">${item.department}</span>
       <span class="ga-row__faculty">${item.totalFaculty}</span>
-      <span class="ga-row__status">${item.status}</span>
+      <span class="ga-row__status">${Number(item.totalFaculty || 0) > 0 ? 'Assignments generated' : 'No faculty assigned'}</span>
       <div class="ga-row__actions">
         <button class="ga-view-btn" data-idx="${idx}">
           <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
@@ -69,6 +87,7 @@ function renderRows() {
 }
 
 renderRows();
+updateDepartmentStats();
 
 // ─────────────────────────────────────────────
 //  VIEW BUTTON DELEGATION

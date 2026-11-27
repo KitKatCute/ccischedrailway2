@@ -242,23 +242,46 @@
         <!-- Two-column lower section -->
         <div class="lower-grid">
 
-          <!-- LEFT: Availability Portal Card -->
-          <div class="avail-portal-card">
-            <div class="avail-portal-card__header">
-              <p class="avail-portal-card__label">SUBMITTED AVAILABILITY</p>
-            </div>
-            <p class="avail-portal-card__description">
-              Submit your preferred teaching schedule and time slots for this semester. Your availability helps the Chairperson create an optimized faculty timetable that accommodates your preferences while ensuring comprehensive course coverage. Once submitted, your availability will be reviewed and used to generate course assignments and the final schedule. You can add multiple time slots across different days to provide flexible scheduling options.
+          <!-- LEFT: Stacked Cards -->
+          <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <!-- Availability Portal Card -->
+            <div class="avail-portal-card">
+              <div class="avail-portal-card__header">
+                <p class="avail-portal-card__label">SUBMITTED AVAILABILITY</p>
+              </div>
+              <p class="avail-portal-card__description">
+                Submit your preferred teaching schedule and time slots for this semester. Your availability helps the Chairperson create an optimized faculty timetable that accommodates your preferences while ensuring comprehensive course coverage. Once submitted, your availability will be reviewed and used to generate course assignments and the final schedule. You can add multiple time slots across different days to provide flexible scheduling options.
 
-            </p>
-            <div class="avail-portal-card__actions">
-              <button class="avail-portal-btn avail-portal-btn--primary" id="addSlotBtn" onclick="window.location.href='add-availability.html'">
-                Add Availability
-              </button>
-              <button class="avail-portal-btn avail-portal-btn--secondary" onclick="window.location.href='view-submission.html'">
-                View My Submission
-              </button>
+              </p>
+              <div class="avail-portal-card__actions">
+                <button class="avail-portal-btn avail-portal-btn--primary" id="addSlotBtn" onclick="window.location.href='add-availability.html'">
+                  Add Availability
+                </button>
+                <button class="avail-portal-btn avail-portal-btn--secondary" onclick="window.location.href='view-submission.html'">
+                  View My Submission
+                </button>
+              </div>
             </div>
+
+            <!-- PREFERRED COURSES Card -->
+            <div class="avail-portal-card">
+              <div class="avail-portal-card__header">
+                <p class="avail-portal-card__label">PREFERRED COURSES</p>
+              </div>
+              <p class="avail-portal-card__description">
+                Submit your preferred courses to teach for this semester. This helps the Chairperson assign courses that match your expertise and interests. You can rank multiple courses by preference, and the system will consider these when generating faculty assignments.
+              </p>
+              <div class="avail-portal-card__actions">
+                <button class="avail-portal-btn avail-portal-btn--primary" onclick="window.location.href='submit-preferred-courses.html'">
+                  Submit Preferred Courses
+                </button>
+                <button class="avail-portal-btn avail-portal-btn--secondary" onclick="window.location.href='view-preferred-courses.html'">
+                  View My Submission
+                </button>
+              </div>
+            </div>
+
           </div>
 
           <!-- RIGHT: Profile panel -->

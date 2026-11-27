@@ -1,0 +1,60 @@
+{
+  "verdict": "CHANGES_REQUESTED",
+  "findings": [
+    {
+      "severity": "blocker",
+      "file": "backend/routes/preferred_courses.py",
+      "line": 136,
+      "issue": "Data corruption: deletes ALL faculty course qualifications across the system instead of scoping to the current submission",
+      "evidence": "FacultyCourseQualification.query.filter_by(faculty_id=user.id).delete() removes all qualifications for the faculty member. This table is shared infrastructure used by the scheduler (app.py line 321) and populated by CSV import (init_db.py line 626). It has no semester_id or submission_id field (models.py line 320-323).",
+      "consequence": "When faculty submit preferred courses, their qualification data used by the scheduler is destroyed. This breaks faculty-to-course matching in schedule generation. Multiple concurrent submissions could corrupt each other's data.",
+      "correction": "Create a new PreferredCourse model with submission_id foreign key (like AvailabilitySlot). Delete scoped to submission_id: PreferredCourse.query.filter_by(submission_id=sub.id).delete(). Leave FacultyCourseQualification untouched."
+    },
+    {
+      "severity": "blocker",
+      "file": "backend/routes/preferred_courses.py",
+      "line": 65,
+      "issue": "get_my_submission queries wrong table - should query PreferredCourse not FacultyCourseQualification",
+      "evidence": "Lines 65-71 query FacultyCourseQualification.query.filter_by(faculty_id=user.id) which is the master qualification table, not submission-specific data",
+      "consequence": "Returns ALL qualifications for faculty across all time, not the current submission's preferred courses",
+      "correction": "Query PreferredCourse.query.filter_by(submission_id=sub.id) after creating the PreferredCourse model"
+    },
+    {
+      "severity": "blocker",
+      "file": "backend/routes/preferred_courses.py",
+      "line": 243,
+      "issue": "get_all_submissions queries wrong table - should query PreferredCourse not FacultyCourseQualification",
+      "evidence": "Lines 243-249 query FacultyCourseQualification for each submission, returning master qualification data instead of submission-specific preferences",
+      "consequence": "Chairperson sees ALL faculty qualifications, not what faculty submitted for this semester",
+      "correction": "Query PreferredCourse.query.filter_by(submission_id=sub.id) for each submission"
+    },
+    {
+      "severity": "blocker",
+      "file": "backend/routes/preferred_courses.py",
+      "line": 150,
+      "issue": "Reload query returns wrong data - queries FacultyCourseQualification instead of PreferredCourse",
+      "evidence": "Lines 150-155 query FacultyCourseQualification.query.filter_by(faculty_id=user.id) after saving",
+      "consequence": "Returns stale or incorrect course list to the frontend",
+      "correction": "Query PreferredCourse.query.filter_by(submission_id=sub.id) after the model is created"
+    },
+    {
+      "severity": "blocker",
+      "file": "backend/routes/preferred_courses.py",
+      "line": 189,
+      "issue": "finalize_submission checks and returns wrong data",
+      "evidence": "Lines 189 and 219-224 query FacultyCourseQualification instead of PreferredCourse",
+      "consequence": "Validation and response return incorrect data",
+      "correction": "Query PreferredCourse.query.filter_by(submission_id=sub.id)"
+    },
+    {
+      "severity": "blocker",
+      "file": "backend/models.py",
+      "line": 0,
+      "issue": "Missing PreferredCourse model",
+      "evidence": "No PreferredCourse model exists. Only PreferredCourseSubmission (line 615) and the shared FacultyCourseQualification (line 318) exist",
+      "consequence": "Implementation cannot properly store submission-specific course preferences",
+      "correction": "Add PreferredCourse model with fields: id, submission_id (FK to preferred_course_submissions), course_id (FK to courses), preference_rank. Add relationship to PreferredCourseSubmission."
+    }
+  ],
+  "reviewDoc": "c:\\Users\\fcp01\\Desktop\\CCISCHED\\.agents\\tasks\\preferred-courses\\review.md"
+}

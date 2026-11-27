@@ -1,0 +1,229 @@
+--- /home/claude/backend_orig_snapshot/app.py	2026-11-27 14:48:25.564489642 +0000
++++ backend/app.py	2026-11-27 14:54:07.865593837 +0000
+@@ -47,6 +47,7 @@
+     User, Course, Room, Section, Semester,
+     AvailabilitySubmission, AvailabilitySlot, FacultyCourseQualification,
+     FacultyAssignment, Schedule,
++    PreferredCourse, PreferredCourseSubmission,
+ )
+ from rf_model import compute_scores
+ from cpsat_solver import (
+@@ -193,9 +194,32 @@
+     # ── Live DataFrame builders — query the DB fresh on every call, so
+     #    anything a chairperson adds/edits via /api/manage/* is immediately
+     #    reflected the next time a schedule is generated. ──
+-    def _faculty_df(scope_user=None) -> pd.DataFrame:
++    def _submitted_preferences(semester_id: int) -> dict[int, str]:
++        """{faculty_id: "CODE1,CODE2,..."} ordered by preference rank, from the
++        Preferred Courses faculty submitted for this semester. Unfinalized
++        drafts ("pending") are ignored."""
++        rows = (
++            db.session.query(PreferredCourseSubmission.faculty_id, Course.course_code)
++            .join(PreferredCourse, PreferredCourse.submission_id == PreferredCourseSubmission.id)
++            .join(Course, Course.id == PreferredCourse.course_id)
++            .filter(PreferredCourseSubmission.semester_id == semester_id,
++                    PreferredCourseSubmission.status.in_(("submitted", "approved")))
++            .order_by(PreferredCourseSubmission.faculty_id,
++                      PreferredCourse.preference_rank, PreferredCourse.id)
++            .all()
++        )
++        out: dict[int, list[str]] = {}
++        for fid, code in rows:
++            out.setdefault(fid, []).append(code)
++        return {fid: ",".join(codes) for fid, codes in out.items()}
++
++    def _faculty_df(scope_user=None, semester_id=None) -> pd.DataFrame:
+         """All faculty, or only the scope_user's department when they are a
+-        department chairperson."""
++        department chairperson. With semester_id, preferred_courses comes from
++        that semester's submitted Preferred Courses (ranked); faculty who
++        haven't submitted get no preference signal. Without it, the legacy
++        User.preferred_courses field is used."""
++        submitted = _submitted_preferences(semester_id) if semester_id else None
+         cols = ["faculty_id", "employee_number", "first_name", "last_name", "email",
+                 "specialization", "academic_rank", "highest_educ_attainment", "exp_years",
+                 "employment_type", "max_units", "preferred_courses", "preferred_days",
+@@ -215,7 +239,8 @@
+             "exp_years":               u.exp_years or 0,
+             "employment_type":         u.employment_type or "Full Time",
+             "max_units":               u.max_units or 21,
+-            "preferred_courses":       u.preferred_courses or "",
++            "preferred_courses":       (submitted.get(u.id, "") if submitted is not None
++                                        else (u.preferred_courses or "")),
+             "preferred_days":          u.preferred_days or "",
+             "time_preference_mon":     u.time_preference_mon or "Not available",
+             "time_preference_tue":     u.time_preference_tue or "Not available",
+@@ -516,7 +541,7 @@
+                                       "Add one in the database first."}), 400
+ 
+         me          = current_user()
+-        faculty_df  = _faculty_df(me)          # department chairpersons: own faculty only
++        faculty_df  = _faculty_df(me, target_sem.id)   # department chairpersons: own faculty only
+         courses_df  = _courses_df(active_only=True)
+         sections_df = _sections_df(semester_id=target_sem.id, scope_user=me)   # ...and own program's sections
+ 
+@@ -577,6 +602,7 @@
+             "academic_year":      target_sem.academic_year,
+             "semester":           target_sem.semester_term,
+             "solver_mode":        assignment_mode,
++            "faculty_with_preferences": int((faculty_df["preferred_courses"].astype(str).str.strip() != "").sum()),
+             "faculty_data":       faculty_view,
+             "dept_summary":       dept_summary,
+             "dept_detail":        dept_det,
+@@ -783,7 +809,7 @@
+                                       f"{target_sem.academic_year} {target_sem.semester_term}. "
+                                       f"Generate a faculty assignment and approve it first."}), 400
+ 
+-        faculty_df  = _faculty_df(me)
++        faculty_df  = _faculty_df(me, target_sem.id)
+         courses_df  = _courses_df(active_only=True)
+         rooms_df    = _rooms_df()
+         sections_df = _sections_df(semester_id=target_sem.id, scope_user=me)
+--- /home/claude/backend_orig_snapshot/rf_model.py	2026-11-27 14:48:25.567434437 +0000
++++ backend/rf_model.py	2026-11-27 14:54:07.863928835 +0000
+@@ -10,7 +10,9 @@
+ 
+ Feature engineering (6 features per pair)
+ ──────────────────────────────────────────
+-1. preferred_match   – course code is in faculty.preferred_courses
++1. preference_score  – rank-weighted score for the course in the faculty's
++                       submitted Preferred Courses (rank 1 = 1.0, decaying
++                       to a floor; 0.0 if the course was not listed)
+ 2. spec_match        – specialisation keyword overlaps course title / code
+ 3. exp_years_norm    – years of experience normalised to [0, 1]
+ 4. rank_score        – numeric weight for academic rank
+@@ -28,6 +30,18 @@
+ score equals the rule-based average (safe fallback).
+ 
+ Blend:  70 % RF probability  +  30 % rule-based score
++        + PREF_BOOST * preference_score   (capped at 1.0)
++
++Why the extra boost?  The historical CSV records who taught what, not what
++they *asked* to teach, so the RF cannot fully learn how much weight a faculty
++member's stated preference deserves.  The boost guarantees a submitted
++preference always moves the score, whether or not the forest is trained.
++
++Where preferences come from
++───────────────────────────
++faculty_df["preferred_courses"] is an ORDERED, comma-separated list of course
++codes (most preferred first).  app.py fills it from the faculty's submitted
++Preferred Courses for the semester being generated.
+ """
+ 
+ from __future__ import annotations
+@@ -66,6 +80,15 @@
+     "phd cs": 0.90,
+ }
+ 
++# ── Preferred-course weighting ──────────────────────────────────
++# rank 1 -> 1.00, rank 2 -> 0.85, rank 3 -> 0.70 ... never below PREF_FLOOR,
++# so every listed course still counts for something.
++PREF_DECAY = 0.15
++PREF_FLOOR = 0.40
++# Added to the final blended score (scaled by the preference score). Raise it
++# to make faculty preferences count for more, lower it for less.
++PREF_BOOST = 0.10
++
+ # Specialisation -> terms found in the current CCISched curriculum.
+ #
+ # These are deliberately based on the course titles/codes in
+@@ -222,13 +245,27 @@
+ 
+ 
+ def _parse_preferred(raw: str) -> list[str]:
+-    """'DB301,GEED012,NET201' → ['DB301', 'GEED012', 'NET201']"""
++    """'COMP 009,COMP 012' -> ['COMP 009', 'COMP 012'] (order = preference rank)"""
+     if not isinstance(raw, str):
+         return []
+-    import re
+     return [c.strip().upper() for c in re.split(r"[,;|]+", raw) if c.strip()]
+ 
+ 
++def preference_rank(prefs: list[str], course_code: str) -> int:
++    """1-based rank of course_code in an ordered preference list, 0 if absent."""
++    code = str(course_code or "").strip().upper()
++    return prefs.index(code) + 1 if code in prefs else 0
++
++
++def preference_score(prefs: list[str], course_code: str) -> float:
++    """0.0 if the course isn't preferred; otherwise 1.0 for rank 1, decaying
++    by PREF_DECAY per rank down to PREF_FLOOR."""
++    rank = preference_rank(prefs, course_code)
++    if not rank:
++        return 0.0
++    return max(PREF_FLOOR, 1.0 - PREF_DECAY * (rank - 1))
++
++
+ def _feature_vector(faculty_row: pd.Series, course_row: pd.Series) -> list[float]:
+     """Build the 6-element feature vector for one (faculty, course) pair."""
+     code  = str(course_row["course_code"]).upper()
+@@ -236,7 +273,7 @@
+     spec  = str(faculty_row.get("specialization", "")).lower()
+     prefs = _parse_preferred(faculty_row.get("preferred_courses", ""))
+ 
+-    preferred_match = float(code in prefs)
++    pref_score = preference_score(prefs, code)
+ 
+     spec_match, _ = specialization_matches(faculty_row, course_row)
+     spec_match = float(spec_match)
+@@ -256,7 +293,7 @@
+         )
+     )
+ 
+-    return [preferred_match, spec_match, exp_norm, rank_score, educ_score, emp_full]
++    return [pref_score, spec_match, exp_norm, rank_score, educ_score, emp_full]
+ 
+ 
+ def _build_training_data(
+@@ -359,6 +396,9 @@
+             else:
+                 final = rule
+ 
++            # Guaranteed lift for courses the faculty asked to teach
++            final = min(1.0, final + PREF_BOOST * feats[0])
++
+             scores[fid][sid] = round(final, 4)
+ 
+     return scores
+--- /home/claude/backend_orig_snapshot/cpsat_solver.py	2026-11-27 14:48:25.566637350 +0000
++++ backend/cpsat_solver.py	2026-11-27 14:54:07.864667899 +0000
+@@ -68,7 +68,9 @@
+ Soft constraints (maximised in objective)
+ ------------------------------------------
+ Stage 1: S1. Maximise sum of RF scores across all assignments.
+-         S2. +0.10 bonus per section where course code is in preferred_courses.
++         S2. Up to +0.10 bonus per section where the course is in the faculty's
++             submitted preferred courses (scaled by preference rank: rank 1 gets
++             the full bonus). Preferences also feed the RF score itself.
+ Stage 2: maximise the number of stage-1 pairs that get placed into a slot
+          (coverage), with a small secondary weight toward placing
+          higher-RF-score pairs first when there's slack to choose from.
+@@ -86,7 +88,7 @@
+ from typing import Dict, List
+ 
+ import pandas as pd
+-from rf_model import specialization_matches
++from rf_model import specialization_matches, preference_rank, preference_score
+ 
+ try:
+     from ortools.sat.python import cp_model
+@@ -223,7 +225,9 @@
+     name      = f"{frow['first_name']} {frow['last_name']}"
+     code      = crow["course_code"]
+     prefs     = _parse_preferred(frow.get("preferred_courses", ""))
+-    pref_note = f"{code} is in {name.split()[0]}'s preferred courses. " if code in prefs else ""
++    pref_rank = preference_rank(prefs, code)
++    pref_note = (f"{code} is #{pref_rank} in {name.split()[0]}'s preferred courses. "
++                 if pref_rank else "")
+     spec_match, spec_reason = specialization_matches(frow, crow)
+     if spec_match:
+         spec_note = (
+@@ -508,7 +512,7 @@
+         raw   = scores.get(fid, {}).get(sid, 0.0)
+         tier = tier_of[(fid, sid)]
+         if tier == 2:
+-            bonus  = 0.10 if code in prefs else 0.0
++            bonus  = 0.10 * preference_score(prefs, code)
+             weight = 2.0 + raw + bonus
+         elif tier == 1:
+             weight = 1.0 + 0.5 * raw

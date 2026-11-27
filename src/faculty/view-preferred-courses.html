@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>View Preferred Courses | Faculty</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles/faculty-dashboard.css" />
+  <link rel="stylesheet" href="../styles/availability-form.css" />
+  <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg" />
+</head>
+<body>
+
+  <div class="layout">
+
+    <!-- ═══════════════════════════════════
+         LEFT SIDEBAR
+    ════════════════════════════════════ -->
+    <aside class="sidebar">
+
+      <div class="sidebar__logo">
+        <img src="../assets/images/logo.svg" alt="CCISched logo" width="38" height="38" />
+        <span class="sidebar__logo-text">CCISCHED</span>
+      </div>
+
+      <nav class="sidebar__nav">
+
+        <a href="dashboard.html" class="sidebar__link sidebar__link--active">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+            <rect x="2" y="2" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8"/>
+            <rect x="11" y="2" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8"/>
+            <rect x="2" y="11" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8"/>
+            <rect x="11" y="11" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.8"/>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="schedule.html" class="sidebar__link">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+            <rect x="2" y="3" width="16" height="15" rx="3" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M2 8H18" stroke="currentColor" stroke-width="1.8"/>
+            <rect x="6" y="1" width="2" height="4" rx="1" fill="currentColor"/>
+            <rect x="12" y="1" width="2" height="4" rx="1" fill="currentColor"/>
+          </svg>
+          <span>My Schedule</span>
+        </a>
+
+        <a href="notifications.html" class="sidebar__link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Notifications</span>
+        </a>
+
+        <a href="profile.html" class="sidebar__link">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M3 19C3 15.686 6.134 13 10 13C13.866 13 17 15.686 17 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <span>Profile</span>
+        </a>
+
+      </nav>
+
+      <div class="sidebar__illustration" aria-hidden="true">
+        <svg width="140" height="180" viewBox="0 0 140 180" fill="none">
+          <circle cx="70" cy="100" r="58" stroke="white" stroke-width="1.2" opacity="0.20"/>
+          <circle cx="70" cy="100" r="42" stroke="white" stroke-width="1" opacity="0.20"/>
+        </svg>
+      </div>
+
+      <button class="sidebar__logout" onclick="window.location.href='../login.html'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 3v9" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+          <path d="M6.343 5.343a9 9 0 1 0 11.314 0" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+        </svg>
+        <span>Logout</span>
+      </button>
+
+    </aside>
+
+    <!-- ═══════════════════════════════════
+         CONTENT AREA
+    ════════════════════════════════════ -->
+    <div class="content-area">
+
+      <!-- ── HEADER BAR ── -->
+      <header class="topbar topbar--slim">
+        <div class="topbar__left">
+        </div>
+        <div class="topbar__right">
+        </div>
+      </header>
+
+      <!-- ── PAGE BODY ── -->
+      <div class="page-body">
+
+        <div class="af-page-title">
+          <h1 class="af-page-title__text">My Preferred Courses</h1>
+          <p class="af-page-title__sub">View your submitted course preferences</p>
+        </div>
+
+        <!-- Main card -->
+        <div class="af-card">
+
+          <!-- Card header -->
+          <div class="af-card__header">
+            <p class="af-card__title">PREFERRED COURSES SUBMISSION</p>
+            <span class="af-card__slot-badge" id="statusBadge">LOADING...</span>
+          </div>
+
+          <!-- Info bar -->
+          <div class="af-card__info">
+            <div>
+              <p class="af-info__row">Semester: <strong id="semesterInfo">—</strong></p>
+              <p class="af-info__row">Submitted: <strong id="submittedInfo">—</strong></p>
+            </div>
+          </div>
+
+          <!-- Courses list -->
+          <div style="padding: 1.5rem;">
+            <div id="coursesList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <p style="text-align: center; color: #999; font-size: 0.85rem; padding: 2rem;">
+                Loading your preferred courses...
+              </p>
+            </div>
+          </div>
+
+          <!-- Footer actions -->
+          <div class="af-card__footer">
+            <button class="af-btn af-btn--add" id="editBtn" onclick="window.location.href='submit-preferred-courses.html'">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                <path d="M9.5 2.5L11.5 4.5L4.5 11.5H2.5V9.5L9.5 2.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              </svg>
+              Edit
+            </button>
+            <button class="af-btn af-btn--close" id="closeBtn" onclick="window.location.href='dashboard.html'">
+              Close
+            </button>
+          </div>
+
+        </div><!-- /af-card -->
+
+      </div><!-- /page-body -->
+    </div><!-- /content-area -->
+
+  </div><!-- /layout -->
+
+  <script src="../scripts/api.js"></script>
+  <script src="../scripts/auth-check.js"></script>
+  <script src="../scripts/notif-badge.js"></script>
+  <script src="../scripts/view-preferred-courses.js"></script>
+</body>
+</html>

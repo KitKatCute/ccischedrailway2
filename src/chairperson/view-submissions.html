@@ -9,6 +9,33 @@
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles/faculty-dashboard.css" />
   <link rel="stylesheet" href="../styles/chairperson-submissions.css" />
+  <style>
+    .submission-tab {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      background: transparent;
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+    }
+    .submission-tab:hover {
+      color: #800000;
+      background: #f9f9f9;
+    }
+    .submission-tab--active {
+      color: #800000;
+      border-bottom-color: #800000;
+    }
+    .submission-tab svg {
+      stroke: currentColor;
+    }
+  </style>
   <link rel="icon" type="image/svg+xml" href="../assets/images/logo.svg" />
 </head>
 <body>
@@ -148,8 +175,8 @@
               </svg>
               <span class="cs-breadcrumb__current">View Submissions</span>
             </div>
-            <h1 class="cs-page-title">Faculty Availability Submissions</h1>
-            <p class="cs-page-sub">1st Semester · AY 2025–2026 · Review submitted schedules from all faculty</p>
+            <h1 class="cs-page-title">Faculty Submissions</h1>
+            <p class="cs-page-sub">1st Semester · AY 2025–2026 · Review submitted schedules and preferences from all faculty</p>
           </div>
           <div class="cs-page-header__right">
             <!-- Summary chips injected by JS -->
@@ -180,6 +207,28 @@
           </div>
         </div>
 
+        <!-- Submission Type Tabs -->
+        <div style="margin-bottom: 1.5rem; border-bottom: 2px solid #e0e0e0;">
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="submission-tab submission-tab--active" id="availabilityTab" data-tab="availability">
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="margin-right: 0.5rem;">
+                <rect x="2" y="3" width="16" height="15" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M2 8H18" stroke="currentColor" stroke-width="1.8"/>
+                <rect x="6" y="1" width="2" height="4" rx="1" fill="currentColor"/>
+                <rect x="12" y="1" width="2" height="4" rx="1" fill="currentColor"/>
+              </svg>
+              Availability Submissions
+            </button>
+            <button class="submission-tab" id="preferredCoursesTab" data-tab="preferredCourses">
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="margin-right: 0.5rem;">
+                <rect x="2" y="3" width="16" height="14" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M6 7H14M6 11H11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+              Preferred Courses
+            </button>
+          </div>
+        </div>
+
         <!-- Submissions table card -->
         <div class="cs-card">
 
@@ -201,13 +250,8 @@
           </div>
 
           <!-- Column headers -->
-          <div class="cs-col-headers">
-            <span class="cs-col cs-col--name">FACULTY NAME</span>
-            <span class="cs-col cs-col--type">TYPE</span>
-            <span class="cs-col cs-col--slots">SLOTS</span>
-            <span class="cs-col cs-col--status">STATUS</span>
-            <span class="cs-col cs-col--date">SUBMITTED</span>
-            <span class="cs-col cs-col--actions">ACTIONS</span>
+          <div class="cs-col-headers" id="csColHeaders">
+            <!-- Will be populated dynamically based on active tab -->
           </div>
 
           <!-- Rows injected by JS -->
@@ -243,6 +287,49 @@
     </div><!-- /content-area -->
 
   </div><!-- /layout -->
+
+  <!-- Preferred Courses Modal -->
+  <div id="preferredCoursesModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; width: 90%; max-width: 700px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+      <!-- Header -->
+      <div style="background: #800000; color: white; padding: 1.5rem; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h2 style="margin: 0 0 0.25rem 0; font-size: 1.1rem; font-weight: 700;" id="modalFacultyName">Preferred Courses</h2>
+          <p style="margin: 0; font-size: 0.85rem; opacity: 0.9;" id="modalSemesterInfo">1st Semester · AY 2025-2026</p>
+        </div>
+        <button onclick="closePreferredCoursesModal()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">&times;</button>
+      </div>
+      
+      <!-- Body -->
+      <div style="padding: 1.5rem; overflow-y: auto; flex: 1;">
+        <div style="margin-bottom: 1rem; padding: 0.75rem 1rem; background: #f5f5f5; border-radius: 6px; border-left: 4px solid #800000;">
+          <p style="margin: 0; font-size: 0.85rem; color: #666; line-height: 1.5;">
+            <strong style="color: #800000;">Note:</strong> Courses are ranked by preference (1 = most preferred). These preferences help optimize faculty assignments.
+          </p>
+        </div>
+        <div id="modalCoursesList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <!-- Courses will be injected here -->
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div style="padding: 1.5rem; border-top: 1px solid #e0e0e0; display: flex; gap: 0.75rem; justify-content: flex-end; background: #f9f9f9; border-radius: 0 0 12px 12px;">
+        <button id="approvePreferredBtn" onclick="approvePreferredCourses()" style="background: #2E7D32; color: white; border: none; padding: 0.65rem 1.5rem; border-radius: 6px; font-family: 'Raleway', sans-serif; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;" onmouseover="if(!this.disabled) this.style.background='#1B5E20'" onmouseout="if(!this.disabled) this.style.background='#2E7D32'">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style="margin-right: 0.5rem; vertical-align: middle;">
+            <path d="M3 8L6.5 11.5L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Approve
+        </button>
+        <button id="rejectPreferredBtn" onclick="rejectPreferredCourses()" style="background: #d32f2f; color: white; border: none; padding: 0.65rem 1.5rem; border-radius: 6px; font-family: 'Raleway', sans-serif; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;" onmouseover="if(!this.disabled) this.style.background='#b71c1c'" onmouseout="if(!this.disabled) this.style.background='#d32f2f'">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style="margin-right: 0.5rem; vertical-align: middle;">
+            <path d="M3 3L13 13M13 3L3 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Reject
+        </button>
+        <button onclick="closePreferredCoursesModal()" style="background: #666; color: white; border: none; padding: 0.65rem 1.5rem; border-radius: 6px; font-family: 'Raleway', sans-serif; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#555'" onmouseout="this.style.background='#666'">Close</button>
+      </div>
+    </div>
+  </div>
 
   <script src="../scripts/api.js"></script>
   <script src="../scripts/auth-check.js"></script>

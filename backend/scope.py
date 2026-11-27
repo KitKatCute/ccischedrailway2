@@ -73,6 +73,26 @@ def course_in_scope(user: User | None, course) -> bool:
     return track is None or (course is not None and (course.program or "").upper() == track)
 
 
+def course_allowed_for_faculty(faculty: User | None, course) -> bool:
+    """May this faculty member list this course as a preferred course?
+
+    IT faculty -> IT courses + general (service) courses
+    CS faculty -> CS courses + general (service) courses
+
+    A course whose ``program`` is blank/unknown is a general course
+    (GEED/COMP service subjects) and is open to everyone. Faculty whose
+    department isn't IT or CS (e.g. the demo accounts' default) are not
+    restricted.
+    """
+    if course is None:
+        return False
+    course_prog = (course.program or "").strip().upper()
+    if course_prog not in ("IT", "CS"):
+        return True            # general subject
+    track = faculty_track(faculty)
+    return track is None or track == course_prog
+
+
 def chairpersons_for(faculty_ids) -> list[User]:
     """Chairpersons who should hear about events concerning these faculty:
     every unscoped chairperson, plus scoped ones whose track matches."""

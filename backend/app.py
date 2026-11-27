@@ -92,6 +92,7 @@ def create_app():
     from routes.auth          import auth_bp
     from routes.profile       import profile_bp
     from routes.availability  import availability_bp
+    from routes.preferred_courses import preferred_courses_bp
     from routes.review        import review_bp
     from routes.notifications import notifications_bp
     from routes.schedule      import schedule_bp
@@ -109,6 +110,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(availability_bp)
+    app.register_blueprint(preferred_courses_bp)
     app.register_blueprint(review_bp)
     app.register_blueprint(notifications_bp)
     app.register_blueprint(schedule_bp)
@@ -140,9 +142,9 @@ def create_app():
 
     # Password-reset requests table: like audit_logs, make sure it exists on
     # startup so a deploy that hasn't re-run init_db.py can't 500 on it.
-    from models import AvailabilityHistory, PasswordResetRequest
+    from models import AvailabilityHistory, PasswordResetRequest, PreferredCourseSubmission, PreferredCourse
     with app.app_context():
-        for _model in (PasswordResetRequest, AvailabilityHistory):
+        for _model in (PasswordResetRequest, AvailabilityHistory, PreferredCourseSubmission, PreferredCourse):
             try:
                 _model.__table__.create(db.engine, checkfirst=True)
             except Exception as exc:
@@ -261,7 +263,7 @@ def register_scheduler_routes(app: Flask):
             "section_id":           s.id,
             "course_id":            s.course_id,
             "section_name":         s.section_name,
-            "program_code":         s.program_code or "",
+            "program_code":         str(s.program_code or "").strip().upper(),
             "preferred_days":       s.preferred_days or "MWF",
             "preferred_time_start": s.preferred_time_start.strftime("%H:%M:%S") if s.preferred_time_start else "07:30:00",
             "preferred_time_end":   s.preferred_time_end.strftime("%H:%M:%S") if s.preferred_time_end else "09:00:00",
@@ -399,9 +401,9 @@ def register_scheduler_routes(app: Flask):
     def _group_by_department(assignments: list[dict]) -> list[dict]:
         bscs_fac, bsit_fac = set(), set()
         for row in assignments:
-            if row.get("program_code") == "BSCS":
+            if str(row.get("program_code") or "").strip().upper() == "BSCS":
                 bscs_fac.add(row["faculty_id"])
-            elif row.get("program_code") == "BSIT":
+            elif str(row.get("program_code") or "").strip().upper() == "BSIT":
                 bsit_fac.add(row["faculty_id"])
         return [
             {"department": "Bachelor of Science in Computer Science",
@@ -413,8 +415,8 @@ def register_scheduler_routes(app: Flask):
     def _dept_detail(faculty_view: list[dict]) -> dict:
         bscs_faculty, bsit_faculty = [], []
         for f in faculty_view:
-            cs_det = [d for d in f["course_details"] if d.get("program_code") == "BSCS"]
-            it_det = [d for d in f["course_details"] if d.get("program_code") == "BSIT"]
+            cs_det = [d for d in f["course_details"] if str(d.get("program_code") or "").strip().upper() == "BSCS"]
+            it_det = [d for d in f["course_details"] if str(d.get("program_code") or "").strip().upper() == "BSIT"]
             justif = f["course_details"][0]["justification"] if f["course_details"] else ""
             if cs_det:
                 bscs_faculty.append({

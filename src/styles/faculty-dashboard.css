@@ -139,6 +139,34 @@ body {
   background: rgba(255,255,255,0.08);
 }
 
+/* Unread notification indicator on the sidebar navigation. */
+.sidebar__link--has-unread:not(.sidebar__link--active) {
+  color: #FFB81C;
+  background: rgba(255, 184, 28, 0.13);
+}
+
+.notif-nav-indicator {
+  margin-left: auto;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #FFB81C;
+  color: #800000;
+  font-size: 0.65rem;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.sidebar__link--active .notif-nav-indicator {
+  background: #800000;
+  color: #FFB81C;
+}
+
 /* Active link — gold pill with right-side tab cutout */
 .sidebar__link--active {
   background: #FFB81C;
